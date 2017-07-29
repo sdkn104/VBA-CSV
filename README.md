@@ -1,7 +1,31 @@
-# VBA-CSV
+VBA-CSV
+==
 
-VBA Functions to parse CSV file
+VBA-CSV provides CSV parsers as VBA functions.
 
+The CSV (Comma-Separated Values) parsers read CSV format text and return Collection or Array of the table contents.
+The parsers comply with [RFC 4180](http://www.ietf.org/rfc/rfc4180.txt) CSV format that allows commas, line breaks, and double-quotes in the fields.
+
+## Examples
+
+       ```
+       aaa,bbb,ccc CRLF
+       zzz,yyy,xxx CRLF
+       ```
+
+
+     ```ParseCSVToCollection()
+     aa
+     ```
+
+a
+
+      ```
+      bbb = 0
+      ```
+
+## Installation
+ 
 ## The CSV File format
 
 There is no definitive standard for CSV (Comma-separated values) file format, however the most commonly accepted definition is [RFC 4180](http://www.ietf.org/rfc/rfc4180.txt). VBA-CSV compliant with RFC 4180, while still allowing some flexibility where CSV files deviate from the definition.
@@ -58,3 +82,11 @@ VBA-CSV accepts the CSV file that satisfies the following rules.
        ```
        " aaa", "bbb", ccc
        ```
+
+## Author
+
+[sdkn104](https://github.com/sdkn104)
+
+## License
+
+This software is released under the [MIT](https://opensource.org/licenses/mit-license.php) License, see LICENSE.txt.
