@@ -11,6 +11,7 @@ Option Explicit
 '
 ' Automatic TEST Procesure
 '
+'   If "End Testing" is shown in Immediate Window without "TEST NG", the TEST is pass.
 '
 Sub Test()
     Dim csvText(10) As String
@@ -26,7 +27,7 @@ Sub Test()
     csvTextErr(2) = "aaa,bbb,ccc" & vbCrLf & "xxx,yyy" 'different field number
     
     ' success test data
-    csvText(0) = ",aaa,SP111SP,Ç†CRLF"""",""xxx"",SP""y,yy""SP,""SPz""""zCRLF""""zSP""SP"
+    csvText(0) = ",aaa,SP111SP,„ÅÇCRLF"""",""xxx"",SP""y,yy""SP,""SPz""""zCRLF""""zSP""SP"
     csvText(0) = Replace(csvText(0), "SP", " " & vbTab)
     csvText(0) = Replace(csvText(0), "CRLF", vbCrLf) ' no line break at EOF
     csvText(1) = csvText(0) & vbCrLf ' line break at EOF
@@ -39,7 +40,7 @@ Sub Test()
     csvText(8) = vbCrLf & vbCrLf ' two records containing one blank field
     csvText(9) = vbCrLf & vbTab ' two records containing one blank field, one TAB field
     'For i = 0 To 3: Debug.Print "[" & csvText(i) & "]": Next
-    csvExpected(0) = Array(Array("", "aaa", "SP111SP", "Ç†"), Array("", "xxx", "y,yy", "SPz""zCRLF""zSP"))
+    csvExpected(0) = Array(Array("", "aaa", "SP111SP", "„ÅÇ"), Array("", "xxx", "y,yy", "SPz""zCRLF""zSP"))
     csvExpected(1) = Array(Array("", "", "", ""), Array("", "", "", ""))
     csvExpected(2) = Array(Array("", "", "", ""), Array("", "", "", ""))
     csvExpected(3) = Array(Array("", "", "", ""), Array("", "", "", ""))
@@ -85,7 +86,7 @@ NextTest:
     If errorCnt <> 2 Then Debug.Print "TEST NG 4:" & errorCnt
     On Error GoTo 0
         
-    Debug.Print "---- Testing success data -------------------"
+    Debug.Print "----- Testing success data -------------------"
     For i = 0 To 9
         Set csv = ParseCSVToCollection(csvText(i))
         If csv Is Nothing Then Debug.Print "TEST NG"
