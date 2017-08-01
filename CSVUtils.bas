@@ -11,7 +11,7 @@ Option Explicit
 
 '----- Global variables --------------------------------
 
-Private ParseCSVEnableRaiseError As Boolean  'default False
+Private ParseCSVAnyErrorIsFatal As Boolean  'default False
 
 
 
@@ -20,18 +20,20 @@ Private ParseCSVEnableRaiseError As Boolean  'default False
 '
 ' Error function
 '
-Private Sub ErrorHandler(code As Long, src As String, msg As String)
-  If err.Number = 0 Then err.Raise code, src, msg
+Private Sub ErrorRaise(code As Long, src As String, msg As String)
+  ' raise only the first error occurred
+  If Err.Number = 0 Then Err.Raise code, src, msg
 End Sub
 
 '
 ' Setting error handling mode
 '
-'  False (default) --- error is not raised, but set error info to Err.Number, source, description
-'  True            --- error is raised as fatal errror
+'  False (default) --- When run-time error occurs, the parser function returns special value (Nothing,  Null, etc.),
+'                      and the error information is set to properties of Err object.
+'  True            --- Any run-time error that occurs is fatal (an error message is displayed and execution stops).
 '
-Public Sub SetParseCSVEnableRaiseError(ByRef value As Boolean)
-  ParseCSVEnableRaiseError = value
+Public Sub SetParseCSVAnyErrorIsFatal(ByRef value As Boolean)
+  ParseCSVAnyErrorIsFatal = value
 End Sub
 
 
@@ -45,8 +47,8 @@ End Sub
 '
 Public Function ParseCSVToCollection(ByRef csvText As String) As Collection
     ' "On Error Resume Next" only if ParseCSVEnableRaiseError is True
-    err.Clear
-    If ParseCSVEnableRaiseError Then GoTo Head
+    Err.Clear
+    If ParseCSVAnyErrorIsFatal Then GoTo Head
     On Error Resume Next
 Head:
     Dim csvLinesIdx As Long
@@ -98,15 +100,15 @@ Head:
         csvCollection.Add fields
         
         If csvCollection(1).Count <> fields.Count Then
-            ErrorHandler 10001, "ParseCSVToCollection", "Syntax Error in CSV: numbers of fields are different among records"
+            ErrorRaise 10001, "ParseCSVToCollection", "Syntax Error in CSV: numbers of fields are different among records"
             GoTo ErrorExit
         End If
         If recLen <> Len(recordText) + 1 Then
-            ErrorHandler 10003, "ParseCSVToCollection", "Syntax Error in CSV: illegal field form"
+            ErrorRaise 10003, "ParseCSVToCollection", "Syntax Error in CSV: illegal field form"
             GoTo ErrorExit
         End If
     Loop
-    If err.Number <> 0 Then GoTo ErrorExit
+    If Err.Number <> 0 Then GoTo ErrorExit
     
     Set ParseCSVToCollection = csvCollection
     Exit Function
@@ -124,8 +126,8 @@ End Function
 '
 Public Function ParseCSVToArray(ByRef csvText As String) As Variant
     ' "On Error Resume Next" only if ParseCSVEnableRaiseError is True
-    err.Clear
-    If ParseCSVEnableRaiseError Then GoTo Head
+    Err.Clear
+    If ParseCSVAnyErrorIsFatal Then GoTo Head
     On Error Resume Next
 Head:
     Dim csv As Collection
@@ -192,7 +194,7 @@ Private Function GetOneRecord(ByRef csvLines As Variant, ByRef csvLinesIdx As Lo
     Loop
     
     If recordText <> "" Then
-      ErrorHandler 10002, "ParseCSVToCollection", "Syntax Error in CSV: illegal double-quote code"
+      ErrorRaise 10002, "ParseCSVToCollection", "Syntax Error in CSV: illegal double-quote code"
     End If
     GetOneRecord = False
 End Function
