@@ -63,24 +63,24 @@ Sub Test()
     Debug.Print "----- Testing error raise mode ----------------"
     
     ' In default, disable raising error
-    err.Clear
+    Err.Clear
     Set csv = ParseCSVToCollection(csvTextErr(0))
-    If Not csv Is Nothing Or err.Number <> 10002 Then Debug.Print "TEST NG 0a:" & err.Number
-    err.Clear
+    If Not csv Is Nothing Or Err.Number <> 10002 Then Debug.Print "TEST NG 0a:" & Err.Number
+    Err.Clear
     csva = ParseCSVToArray(csvTextErr(0))
-    If Not IsNull(csva) Or err.Number <> 10002 Then Debug.Print "TEST NG 0b:" & err.Number
-    err.Clear
+    If Not IsNull(csva) Or Err.Number <> 10002 Then Debug.Print "TEST NG 0b:" & Err.Number
+    Err.Clear
             
     ' enabled raising error
     Dim errorCnt As Long
-    SetParseCSVEnableRaiseError True 'enable
+    SetParseCSVAnyErrorIsFatal True 'enable
     On Error GoTo ErrCatch
     Set csv = ParseCSVToCollection(csvTextErr(0))
     csva = ParseCSVToArray(csvTextErr(0))
     GoTo NextTest
 ErrCatch:
     errorCnt = errorCnt + 1
-    If err.Number <> 10002 Then Debug.Print "TEST NG 3:" & err.Number
+    If Err.Number <> 10002 Then Debug.Print "TEST NG 3:" & Err.Number
     Resume Next
 NextTest:
     If errorCnt <> 2 Then Debug.Print "TEST NG 4:" & errorCnt
@@ -90,7 +90,7 @@ NextTest:
     For i = 0 To 9
         Set csv = ParseCSVToCollection(csvText(i))
         If csv Is Nothing Then Debug.Print "TEST NG"
-        If err.Number <> 0 Then Debug.Print "TEST NG"
+        If Err.Number <> 0 Then Debug.Print "TEST NG"
         If csv.Count <> UBound(csvExpected(i)) + 1 Then Debug.Print "TEST NG row count"
         For r = 1 To csv.Count
           If csv(r).Count <> UBound(csvExpected(i)(r - 1)) + 1 Then Debug.Print "TEST NG col count"
@@ -102,7 +102,7 @@ NextTest:
         
         csva = ParseCSVToArray(csvText(i))
         If IsNull(csva) Then Debug.Print "TEST NG"
-        If err.Number <> 0 Then Debug.Print "TEST NG"
+        If Err.Number <> 0 Then Debug.Print "TEST NG"
         If Not (LBound(csva, 1) = 1 Or (LBound(csva, 1) = 0 And UBound(csva, 1) = -1)) Then Debug.Print "TEST NG illegal array bounds"
         If UBound(csva, 1) - LBound(csva, 1) + 1 <> UBound(csvExpected(i)) + 1 Then Debug.Print "TEST NG row count"
         For r = LBound(csva, 1) To UBound(csva, 1)
@@ -117,29 +117,29 @@ NextTest:
 
     Debug.Print "----- Testing error data ----------------"
 
-    SetParseCSVEnableRaiseError False 'disable
+    SetParseCSVAnyErrorIsFatal False 'disable
     
-    err.Clear
+    Err.Clear
     Set csv = ParseCSVToCollection(csvTextErr(0))
-    If Not csv Is Nothing Or err.Number <> 10002 Then Debug.Print "TEST NG 0a:" & err.Number
-    err.Clear
+    If Not csv Is Nothing Or Err.Number <> 10002 Then Debug.Print "TEST NG 0a:" & Err.Number
+    Err.Clear
     csva = ParseCSVToArray(csvTextErr(0))
-    If Not IsNull(csva) Or err.Number <> 10002 Then Debug.Print "TEST NG 0b:" & err.Number
-    err.Clear
+    If Not IsNull(csva) Or Err.Number <> 10002 Then Debug.Print "TEST NG 0b:" & Err.Number
+    Err.Clear
 
     Set csv = ParseCSVToCollection(csvTextErr(1))
-    If Not csv Is Nothing Or err.Number <> 10003 Then Debug.Print "TEST NG 1a:" & err.Number
-    err.Clear
+    If Not csv Is Nothing Or Err.Number <> 10003 Then Debug.Print "TEST NG 1a:" & Err.Number
+    Err.Clear
     csva = ParseCSVToArray(csvTextErr(1))
-    If Not IsNull(csva) Or err.Number <> 10003 Then Debug.Print "TEST NG 1b:" & err.Number
-    err.Clear
+    If Not IsNull(csva) Or Err.Number <> 10003 Then Debug.Print "TEST NG 1b:" & Err.Number
+    Err.Clear
     
     Set csv = ParseCSVToCollection(csvTextErr(2))
-    If Not csv Is Nothing Or err.Number <> 10001 Then Debug.Print "TEST NG 2a:" & err.Number
-    err.Clear
+    If Not csv Is Nothing Or Err.Number <> 10001 Then Debug.Print "TEST NG 2a:" & Err.Number
+    Err.Clear
     csva = ParseCSVToArray(csvTextErr(2))
-    If Not IsNull(csva) Or err.Number <> 10001 Then Debug.Print "TEST NG 2b:" & err.Number
-    err.Clear
+    If Not IsNull(csva) Or Err.Number <> 10001 Then Debug.Print "TEST NG 2b:" & Err.Number
+    Err.Clear
     
     Debug.Print "----- End Testing ----------------"
             
