@@ -9,22 +9,27 @@ Attribute VB_Name = "CSVUtils"
 Option Explicit
 
 
-'----- ERROR HANDLER -------------
-Public ParseCSVEnableRaiseError As Boolean  'default False
+'----- Global variables --------------------------------
 
+Private ParseCSVEnableRaiseError As Boolean  'default False
 
 
 
 '----- ERROR HANDLER -----------------------------------
 
+'
+' Error function
+'
 Private Sub ErrorHandler(code As Long, src As String, msg As String)
-'  If ParseCSVEnableRaiseError Then
-'    Err.raise code, src, msg
-'  End If
-'  On Error Resume Next
   If err.Number = 0 Then err.Raise code, src, msg
 End Sub
 
+'
+' Setting error handling mode
+'
+'  False (default) --- error is not raised, but set error info to Err.Number, source, description
+'  True            --- error is raised as fatal errror
+'
 Public Sub SetParseCSVEnableRaiseError(ByRef value As Boolean)
   ParseCSVEnableRaiseError = value
 End Sub
@@ -32,13 +37,19 @@ End Sub
 
 '------ Public Function/Sub ---------------------------
 
+'
+' Parse CSV text returning Collection
+'
+'   Return a Collection of records each of which is a Collection of fields
+'   When error, return Nothing
+'
 Public Function ParseCSVToCollection(ByRef csvText As String) As Collection
+    ' "On Error Resume Next" only if ParseCSVEnableRaiseError is True
     err.Clear
     If ParseCSVEnableRaiseError Then GoTo Head
     On Error Resume Next
 Head:
     Dim csvLinesIdx As Long
-    Dim csvLinesIdxMax As Long
     Dim csvTextTmp As String
     Dim lineText As String
     Dim recordText As String
@@ -51,11 +62,10 @@ Head:
     Dim fields As Collection
     Dim csvCollection As Collection
     Set csvCollection = New Collection 'empty collection
-    
-    Set ParseCSVToCollection = csvCollection
-        
     Set regNL = CreateObject("VBScript.RegExp")
     Set regField = CreateObject("VBScript.RegExp")
+    
+    Set ParseCSVToCollection = csvCollection
     
     regField.Pattern = "(\s*""(([^""]|"""")*)""\s*|([^,""]*)),"
     regField.Global = True
@@ -72,11 +82,10 @@ Head:
     csvLines = Split(csvTextTmp, "_^`~_")
     If csvTextTmp = "" Then csvLines = Array("") 'since VBA Split() returns empty(zero length) array for ""
     csvLinesIdx = LBound(csvLines)
-    csvLinesIdxMax = UBound(csvLines)
     csvTextTmp = "" 'to free memory
 
     'extract records and fields
-    Do While GetOneRecord(csvLines, csvLinesIdx, csvLinesIdxMax, recordText)
+    Do While GetOneRecord(csvLines, csvLinesIdx, recordText)
         recLen = 0
         Set fields = New Collection
         For Each mField In regField.Execute(recordText & ",")
@@ -106,8 +115,15 @@ ErrorExit:
     Set ParseCSVToCollection = Nothing
 End Function
 
-
+'
+' Parse CSV text and return 2-dim array
+'
+'  Return 2-dim array --- String(1 TO recordCount, 1 TO fieldCount)
+'  When CSV text is "", return empty array --- String(0 TO -1)
+'  When error, return Null
+'
 Public Function ParseCSVToArray(ByRef csvText As String) As Variant
+    ' "On Error Resume Next" only if ParseCSVEnableRaiseError is True
     err.Clear
     If ParseCSVEnableRaiseError Then GoTo Head
     On Error Resume Next
@@ -117,13 +133,15 @@ Head:
     Dim csvArray() As String
     Dim ri As Long, fi As Long
     
-    ParseCSVToArray = Null
+    ParseCSVToArray = Null 'for error
   
+    ' convert CSV text to Collection
     Set csv = ParseCSVToCollection(csvText)
     If csv Is Nothing Then  'error occur
         Exit Function
     End If
     
+    ' get size of collections
     recCnt = csv.Count
     If recCnt = 0 Then
         ParseCSVToArray = Split("", "/") 'return empty(zero length) String array of bound 0 TO -1
@@ -132,6 +150,7 @@ Head:
     End If
     fldCnt = csv(1).Count
     
+    ' copy collection to array
     ReDim csvArray(1 To recCnt, 1 To fldCnt) As String
     For ri = 1 To recCnt
       For fi = 1 To fldCnt
@@ -149,19 +168,21 @@ End Function
 '
 ' Get the next one record from csvLines, and put it into recordText
 '
-Private Function GetOneRecord(ByRef csvLines As Variant, ByRef csvLinesIdx As Long, ByRef csvLinesIdxMax As Long, ByRef recordText As String) As Boolean
+Private Function GetOneRecord(ByRef csvLines As Variant, ByRef csvLinesIdx As Long, ByRef recordText As String) As Boolean
+    Dim csvLinesIdxMax As Long
     Dim dQuateCnt As Long
     Dim lineText As String
     Dim regNL
     Set regNL = CreateObject("VBScript.RegExp")
     regNL.Pattern = "(\r\n|\r|\n)$"
+    csvLinesIdxMax = UBound(csvLines)
     
     recordText = ""
     dQuateCnt = 0
     Do While csvLinesIdx <= csvLinesIdxMax
         lineText = csvLines(csvLinesIdx)
         recordText = recordText & lineText
-        dQuateCnt = dQuateCnt + StrCount(lineText, """")
+        dQuateCnt = dQuateCnt + StrCount(lineText, """") 'number of double quates in recordText
         csvLinesIdx = csvLinesIdx + 1
         If dQuateCnt Mod 2 = 0 Then  'if the number of double-quates is even, then the current field ends
             recordText = regNL.Replace(recordText, "") 'remove the trailing line break code
@@ -170,25 +191,23 @@ Private Function GetOneRecord(ByRef csvLines As Variant, ByRef csvLinesIdx As Lo
         End If
     Loop
     
-    GetOneRecord = False
     If recordText <> "" Then
       ErrorHandler 10002, "ParseCSVToCollection", "Syntax Error in CSV: illegal double-quote code"
     End If
+    GetOneRecord = False
 End Function
 
-
+'
 ' count the string Target in Source
+'
 Private Function StrCount(Source As String, Target As String) As Long
     Dim n As Long, cnt As Long
     n = 0
     cnt = 0
     Do
         n = InStr(n + 1, Source, Target)
-        If n = 0 Then
-            Exit Do
-        Else
-            cnt = cnt + 1
-        End If
+        If n = 0 Then Exit Do
+        cnt = cnt + 1
     Loop
     StrCount = cnt
 End Function
