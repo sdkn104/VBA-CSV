@@ -1,38 +1,68 @@
 VBA-CSV
-==
+=======
 
 VBA-CSV provides CSV parsers as VBA functions.
+The CSV (Comma-Separated Values) parsers read CSV text and return Collection or Array of the CSV table contents.
+* The parsers are compliant with the CSV format defined in [RFC4180](http://www.ietf.org/rfc/rfc4180.txt), which allows commas, line
+  breaks, and double-quotes included in the fields.
 
-The CSV (Comma-Separated Values) parsers read text in CSV format and return Collection or Array of the table contents.
-The parsers comply with [RFC4180](http://www.ietf.org/rfc/rfc4180.txt) of CSV format that allows commas, line breaks, and double-quotes included in the fields.
 
 ## Examples
 
-`ParseCSVToCollection(csvText as String) As Collection`
-```VB
-Dim csv As Collection
-Set csv = ParseCSVToCollection("aaa,bbb,ccc" & vbCrLf & "xxx,yyy,zzz")
-' csv(1)(2)  --> bbb
-' csv(2)(1)  --> xxx
-```
+#### ParseCSVToCollection(csvText as String) As Collection
 
-a
+    ```VBA
+    Dim csv As Collection
+    Dim rec As Collection, fld As Variant
 
-```vb
-bbb = 0
-```
+    Set csv = ParseCSVToCollection("aaa,bbb,ccc" & vbCr & "xxx,yyy,zzz")
+    If csv Is Nothing Then
+        Debug.Print Err.Number & " (" & Err.Source & ") " & Err.Description
+    End If
+    
+    Debug.Print csv(1)(3) '----> ccc
+    Debug.Print csv(2)(1) '----> xxx
+    For Each rec In csv
+      For Each fld In rec
+        Debug.Print fld
+      Next
+    Next
+    ```
+
+#### ParseCSVToArray(csvText as String) As Variant
+
+    ```VBA
+    Dim csv As Variant
+    Dim i As Long, j As Variant
+
+    csv = ParseCSVToArray("aaa,bbb,ccc" & vbCr & "xxx,yyy,zzz")
+    If IsNull(csv) Then
+        Debug.Print Err.Number & " (" & Err.Source & ") " & Err.Description
+    End If
+    
+    Debug.Print csv(1, 3) '----> ccc
+    Debug.Print csv(2, 1) '----> xxx
+    For i = LBound(csv, 1) To UBound(csv, 1)
+      For j = LBound(csv, 2) To UBound(csv, 2)
+        Debug.Print csv(i, j)
+      Next
+    Next
+    ```
+
+#### Set(csvText as String) As Variant
+
 
 ## Installation
  
 1. Download the latest release
-2. Import JsonConverter.bas into your project (Open VBA Editor, Alt + F11; File > Import File)
-3. Add Dictionary reference/class
- - For Windows-only, include a reference to "Microsoft Scripting Runtime"
- - For Windows and Mac, include VBA-Dictionary
+2. Import CSVUtils.bas into your project (Open VBA Editor, Alt + F11; File > Import File)
+3. Add reference to RegExp (VBScript ???)
 
 ## The CSV File format
 
-There is no definitive standard for CSV (Comma-separated values) file format, however the most commonly accepted definition is [RFC4180](http://www.ietf.org/rfc/rfc4180.txt). VBA-CSV compliant with RFC 4180, while still allowing some flexibility where CSV files deviate from the definition.
+There is no definitive standard for CSV (Comma-separated values) file format, however the most commonly accepted definition is 
+[RFC4180](http://www.ietf.org/rfc/rfc4180.txt). VBA-CSV is compliant with RFC 4180, while still allowing some flexibility 
+where CSV text deviate from the definition.
 VBA-CSV accepts the CSV file that satisfies the following rules.
 
 1.  Each record is located on a separate line, delimited by a line break (CRLF, *CR, or LF*).
@@ -43,6 +73,7 @@ VBA-CSV accepts the CSV file that satisfies the following rules.
        ```
 
 2.  The last record in the file may or may not have an ending line break.
+    *IF the last line is empty, the ending line break is necessary.*
 
        ```
        aaa,bbb,ccc CRLF
