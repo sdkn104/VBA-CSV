@@ -11,7 +11,12 @@ The CSV (Comma-Separated Values) parsers read CSV text and return Collection or 
 
 #### ParseCSVToCollection(csvText as String) As Collection
 
-    ```VBA
+```
+Dim csv As Collection
+Dim rec As Collection, fld As Variant
+```
+
+```
     Dim csv As Collection
     Dim rec As Collection, fld As Variant
 
@@ -27,11 +32,11 @@ The CSV (Comma-Separated Values) parsers read CSV text and return Collection or 
         Debug.Print fld
       Next
     Next
-    ```
+```
 
 #### ParseCSVToArray(csvText as String) As Variant
 
-    ```VBA
+    ```
     Dim csv As Variant
     Dim i As Long, j As Variant
 
