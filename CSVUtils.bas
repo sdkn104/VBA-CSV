@@ -46,7 +46,7 @@ End Sub
 '   When error, return Nothing
 '
 Public Function ParseCSVToCollection(ByRef csvText As String) As Collection
-    ' "On Error Resume Next" only if ParseCSVEnableRaiseError is True
+    ' "On Error Resume Next" only if ParseCSVAnyErrorIsFatal is True
     Err.Clear
     If ParseCSVAnyErrorIsFatal Then GoTo Head
     On Error Resume Next
@@ -125,7 +125,7 @@ End Function
 '  When error, return Null
 '
 Public Function ParseCSVToArray(ByRef csvText As String) As Variant
-    ' "On Error Resume Next" only if ParseCSVEnableRaiseError is True
+    ' "On Error Resume Next" only if ParseCSVAnyErrorIsFatal is True
     Err.Clear
     If ParseCSVAnyErrorIsFatal Then GoTo Head
     On Error Resume Next
