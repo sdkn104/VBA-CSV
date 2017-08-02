@@ -30,7 +30,7 @@ The CSV (Comma-Separated Values) parsers read CSV text and return Collection or 
 ```
 
 `ParseCSVToCollection()` returns a Collection of records each of which is a collection of fields.
-If error occurs, it returns Nothing and the error information is set in Err object.
+If error occurs, it returns `Nothing` and the error information is set in `Err` object.
 
 #### ParseCSVToArray(csvText as String) As Variant
 
@@ -53,7 +53,7 @@ If error occurs, it returns Nothing and the error information is set in Err obje
 ```
 
 `ParseCSVToArray()` returns a Variant that contains 2-dimensional array --- String(1 TO recordCount, 1 TO fieldCount).
-If error occurs, it returns Null and the error information is set in Err object.
+If error occurs, it returns `Null` and the error information is set in `Err` object.
 If input text is zero-length (""), it returns empty array --- String(0 TO -1).
 
 #### SetParseCSVAnyErrorIsFatal(value As Boolean)
