@@ -29,6 +29,9 @@ The CSV (Comma-Separated Values) parsers read CSV text and return Collection or 
     Next
 ```
 
+`ParseCSVToCollection()` returns a Collection of records each of which is a collection of fields.
+If error occurs, it returns Nothing and the error information is set in Err object.
+
 #### ParseCSVToArray(csvText as String) As Variant
 
 ```vb.net
@@ -49,21 +52,42 @@ The CSV (Comma-Separated Values) parsers read CSV text and return Collection or 
     Next
 ```
 
-#### Set(csvText as String) As Variant
+`ParseCSVToArray()` returns a Variant that contains 2-dimensional array --- String(1 TO recordCount, 1 TO fieldCount).
+If error occurs, it returns Null and the error information is set in Err object.
+If input text is zero-length (""), it returns empty array --- String(0 TO -1).
 
+#### SetParseCSVAnyErrorIsFatal(value As Boolean)
+
+```vb.net
+    SetParseCSVAnyErrorIsFatal True
+    SetParseCSVAnyErrorIsFatal False
+```
+
+This function changes error handling mode for CSV parsers.
+
+**False (default)** --- When run-time error occurs, the parser function returns special value (Nothing,  Null, etc.),
+                    and the error information is set to properties of Err object.
+
+**True**            --- Any run-time error that occurs is fatal (an error message is displayed and execution stops).
 
 ## Installation
  
 1. Download the latest release
 2. Import CSVUtils.bas into your project (Open VBA Editor, Alt + F11; File > Import File)
-3. Add reference to RegExp (VBScript ???)
+3. To enable RegExp, Add reference to "Microsoft VBScript Regular Expressions 5.5" (In VBA Editor, Tools > Reference Setting)
+
+## Tested on
+
+* Excel 2000
+* Excel 2013
 
 ## The CSV File format
 
 There is no definitive standard for CSV (Comma-separated values) file format, however the most commonly accepted definition is 
 [RFC4180](http://www.ietf.org/rfc/rfc4180.txt). VBA-CSV is compliant with RFC 4180, while still allowing some flexibility 
 where CSV text deviate from the definition.
-VBA-CSV accepts the CSV file that satisfies the following rules.
+The followings are the rules of CSV format such that VBA-CSV can handle correctly. 
+(The rules indicated by *italic characters* don't exists in RFC4180)
 
 1.  Each record is located on a separate line, delimited by a line break (CRLF, *CR, or LF*).
 
@@ -73,7 +97,7 @@ VBA-CSV accepts the CSV file that satisfies the following rules.
        ```
 
 2.  The last record in the file may or may not have an ending line break.
-    *IF the last line is empty, the ending line break is necessary.*
+    *The CSV file containing nothing (= "") is recognized as empty (it has no record nor fields).*
 
        ```
        aaa,bbb,ccc CRLF
@@ -89,7 +113,6 @@ VBA-CSV accepts the CSV file that satisfies the following rules.
 4.  Each record should contain the same number of fields throughout the file.
 
 5.  Each field may or may not be enclosed in double quotes.  
-     If fields are not enclosed with double quotes, then double quotes may not appear inside the fields.
 
        ```
        "aaa","bbb","ccc" CRLF
@@ -111,7 +134,7 @@ VBA-CSV accepts the CSV file that satisfies the following rules.
        "aaa","b""bb","ccc"
        ```
 
-8.    Spaces *(including tabs)* are considered part of a field and should not be ignored *(but some applications ignore them)*.
+8.    Spaces *(including tabs)* are considered part of a field and should not be ignored.
       *If fields are enclosed with double quotes, then leading and trailing spaces outside of double quotes are ignored.*
 
        ```
