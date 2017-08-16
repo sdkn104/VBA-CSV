@@ -1,11 +1,11 @@
 VBA-CSV
 =======
 
-VBA-CSV provides CSV parsers as VBA functions.
-The CSV (Comma-Separated Values) parsers read CSV text and return Collection or Array of the CSV table contents.
-* The parsers are compliant with the CSV format defined in [RFC4180](http://www.ietf.org/rfc/rfc4180.txt), which allows commas, line
-  breaks, and double-quotes included in the fields.
-
+VBA-CSV provides CSV parsers and writer as VBA functions.
+The CSV (Comma-Separated Values) parsers read CSV text and return Collection or Array of the CSV table contents. The CSV writer converts 2-dimensional array to CSV text.
+* The parsers and writer are compliant with the CSV format defined in [RFC4180](http://www.ietf.org/rfc/rfc4180.txt), 
+  which allows commas, line breaks, and double-quotes included in the fields.
+* Test procedure and Examples are included.
 
 ## Examples
 
@@ -56,14 +56,24 @@ If error occurs, it returns `Nothing` and the error information is set in `Err` 
 If error occurs, it returns `Null` and the error information is set in `Err` object.
 If input text is zero-length (""), it returns empty array --- String(0 TO -1).
 
-#### SetParseCSVAnyErrorIsFatal(value As Boolean)
+#### ConvertArrayToCSV(inArray as Variant) As String
 
 ```vb.net
-    SetParseCSVAnyErrorIsFatal True
-    SetParseCSVAnyErrorIsFatal False
+    Dim csv As String
+    Dim a(2, 2) As Variant
+
+    To be seen.
 ```
 
-This function changes error handling mode for CSV parsers.
+
+#### SetCSVUtilsAnyErrorIsFatal(value As Boolean)
+
+```vb.net
+    SetCSVUtilsAnyErrorIsFatal True
+    SetCSVUtilsAnyErrorIsFatal False
+```
+
+This function changes error handling mode for CSV parsers and writer.
 
 **False (default)** --- When run-time error occurs, the parser function returns special value (Nothing,  Null, etc.),
                     and the error information is set to properties of Err object.
