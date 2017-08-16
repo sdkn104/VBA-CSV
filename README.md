@@ -60,9 +60,18 @@ If input text is zero-length (""), it returns empty array --- String(0 TO -1).
 
 ```vb.net
     Dim csv As String
-    Dim a(2, 2) As Variant
-
-    To be seen.
+    Dim a(1 To 2, 1 To 2) As Variant
+    a(1, 1) = DateSerial(1900, 4, 14)
+    a(1, 2) = "Exposition Universelle de Paris 1900"
+    a(2, 1) = DateSerial(1970, 3, 15)
+    a(2, 2) = "Japan World Exposition, Osaka 1970"
+    
+    csv = ConvertArrayToCSV(a, "yyyy/mm/dd")
+    If Err.Number <> 0 Then
+        Debug.Print Err.Number & " (" & Err.Source & ") " & Err.Description
+    End If
+    
+    Debug.Print csv
 ```
 
 
