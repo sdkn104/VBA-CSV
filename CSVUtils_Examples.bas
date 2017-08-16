@@ -46,10 +46,30 @@ Sub Example2()
     Next
 End Sub
 
+
+'
+' Example for ParseCSVToArray()
+'
+Sub Example3()
+    Dim csv As String
+    Dim a(1 To 2, 1 To 2) As Variant
+    a(1, 1) = DateSerial(1900, 4, 14)
+    a(1, 2) = "Exposition Universelle de Paris 1900"
+    a(2, 1) = DateSerial(1970, 3, 15)
+    a(2, 2) = "Japan World Exposition, Osaka 1970"
+    
+    csv = ConvertArrayToCSV(a, "yyyy/mm/dd")
+    If Err.Number <> 0 Then
+        Debug.Print Err.Number & " (" & Err.Source & ") " & Err.Description
+    End If
+    
+    Debug.Print csv
+End Sub
+
 '
 ' Example for usage of readCSVFile() and debugPrintResults()
 '
-Sub Example3()
+Sub Example4()
     Dim text As String
     Dim csv As Variant
 
@@ -106,4 +126,3 @@ Sub debugPrintResults(csv As Variant)
        Debug.Print "Not collection nor array"
     End If
 End Sub
-
