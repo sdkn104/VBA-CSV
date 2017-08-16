@@ -9,19 +9,19 @@ Attribute VB_Name = "CSVUtils"
 Option Explicit
 
 
-'----- Global variables --------------------------------
+'----- Global variables -------------------------------------------------------------
 
-Private ParseCSVAnyErrorIsFatal As Boolean  'default False
+Private CSVUtilsAnyErrorIsFatal As Boolean  'default False
 
 
 
-'----- ERROR HANDLER -----------------------------------
+'----- ERROR HANDLER ----------------------------------------------------------------
 
 '
 ' Error function
 '
 Private Sub ErrorRaise(code As Long, src As String, msg As String)
-  ' raise only the first error occurred
+  ' raise only if this is the first error
   If Err.Number = 0 Then Err.Raise code, src, msg
 End Sub
 
@@ -32,12 +32,12 @@ End Sub
 '                      and the error information is set to properties of Err object.
 '  True            --- Any run-time error that occurs is fatal (an error message is displayed and execution stops).
 '
-Public Sub SetParseCSVAnyErrorIsFatal(ByRef value As Boolean)
-  ParseCSVAnyErrorIsFatal = value
+Public Sub SetCSVUtilsAnyErrorIsFatal(ByRef value As Boolean)
+  CSVUtilsAnyErrorIsFatal = value
 End Sub
 
 
-'------ Public Function/Sub ---------------------------
+'------ Public Function/Sub --------------------------------------------------------
 
 '
 ' Parse CSV text returning Collection
@@ -46,9 +46,9 @@ End Sub
 '   When error, return Nothing
 '
 Public Function ParseCSVToCollection(ByRef csvText As String) As Collection
-    ' "On Error Resume Next" only if ParseCSVAnyErrorIsFatal is True
+    ' "On Error Resume Next" only if CSVUtilsAnyErrorIsFatal is True
     Err.Clear
-    If ParseCSVAnyErrorIsFatal Then GoTo Head
+    If CSVUtilsAnyErrorIsFatal Then GoTo Head
     On Error Resume Next
 Head:
     Dim csvLinesIdx As Long
@@ -125,9 +125,9 @@ End Function
 '  When error, return Null
 '
 Public Function ParseCSVToArray(ByRef csvText As String) As Variant
-    ' "On Error Resume Next" only if ParseCSVAnyErrorIsFatal is True
+    ' "On Error Resume Next" only if CSVUtilsAnyErrorIsFatal is True
     Err.Clear
-    If ParseCSVAnyErrorIsFatal Then GoTo Head
+    If CSVUtilsAnyErrorIsFatal Then GoTo Head
     On Error Resume Next
 Head:
     Dim csv As Collection
@@ -164,8 +164,64 @@ Head:
 End Function
 
 
+'
+' Convert 2-dim array to CSV text string
+'
+'  inArray : 2-dim array of arbitary size/range and type.
+'  fmtDate : format used for conversion from type Date to type String
+'  When error, return ""
+'
+Public Function ConvertArrayToCSV(inArray As Variant, Optional fmtDate As String = "yyyy/m/d") As String
+    ' "On Error Resume Next" only if CSVUtilsAnyErrorIsFatal is True
+    Err.Clear
+    If CSVUtilsAnyErrorIsFatal Then GoTo Head
+    On Error Resume Next
+Head:
+    Dim csv As String
+    Dim r As Long, c As Long, ub2 As Long
+    Dim v As Variant
+    Dim cell As String
+    
+    If Not IsArray(inArray) Then
+        ErrorRaise 10004, "ConvertArrayToCSV", "Input argument inArray is not array"
+        GoTo ErrorExit
+    End If
+    
+    ub2 = UBound(inArray, 2)
+    If Err.Number <> 0 Then 'expecting Err.Number = 9, Err.Description = "Subscript out of range"
+        GoTo ErrorExit
+    End If
+            
+    For r = LBound(inArray, 1) To UBound(inArray, 1)
+      For c = LBound(inArray, 2) To UBound(inArray, 2)
+        v = inArray(r, c)
+        'formatting
+        cell = v
+        If TypeName(v) = "Date" Then cell = Format(v, fmtDate)
+        'quote and escape
+        If InStr(cell, ",") > 0 Or InStr(cell, """") > 0 Or InStr(cell, vbCr) > 0 Or InStr(cell, vbLf) > 0 Then
+          cell = Replace(cell, """", """""")
+          cell = """" & cell & """"
+        End If
+        'add to csv
+        csv = csv & cell
+        If c <> ub2 Then
+          csv = csv & ","
+        Else
+          csv = csv & vbCrLf
+        End If
+      Next
+    Next
+    If Err.Number <> 0 Then GoTo ErrorExit 'unexpected error
+    
+    ConvertArrayToCSV = csv
+    Exit Function
+ErrorExit:
+    ConvertArrayToCSV = ""
+End Function
 
-' ------------- Private function/sub ----------------------------------------
+
+' ------------- Private function/sub ---------------------------------------------------------------------
 
 '
 ' Get the next one record from csvLines, and put it into recordText
