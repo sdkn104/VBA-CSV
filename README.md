@@ -5,7 +5,7 @@ VBA-CSV provides CSV parsers and writer as VBA functions.
 The CSV (Comma-Separated Values) parsers read CSV text and return Collection or Array of the CSV table contents. The CSV writer converts 2-dimensional array to CSV text.
 * The parsers and writer are compliant with the CSV format defined in [RFC4180](http://www.ietf.org/rfc/rfc4180.txt), 
   which allows commas, line breaks, and double-quotes included in the fields.
-* Test procedure and Examples are included.
+* Function test procedure, performance test procedure and Examples are included.
 
 ## Examples
 
@@ -56,7 +56,7 @@ If error occurs, it returns `Nothing` and the error information is set in `Err` 
 If error occurs, it returns `Null` and the error information is set in `Err` object.
 If input text is zero-length (""), it returns empty array --- String(0 TO -1).
 
-#### ConvertArrayToCSV(inArray as Variant) As String
+#### ConvertArrayToCSV(inArray as Variant, Optional fmtDate As String = "yyyy/m/d") As String
 
 ```vb.net
     Dim csv As String
@@ -74,6 +74,10 @@ If input text is zero-length (""), it returns empty array --- String(0 TO -1).
     Debug.Print csv
 ```
 
+`ConvertArrayToCSV()` reads 2-dimensional array `inArray` and return CSV text.
+If error occurs, it return the string "", and the error information is set in `Err` object.
+`fmtDate` is used as the argument of text formatting function [`Format`](https://msdn.microsoft.com/library/office/gg251755.aspx) 
+if an element of the array is `Date` type.
 
 #### SetCSVUtilsAnyErrorIsFatal(value As Boolean)
 
@@ -159,6 +163,14 @@ The followings are the rules of CSV format such that VBA-CSV can handle correctl
        ```
        " aaa", "bbb", ccc
        ```
+9.    *The special quotation expression (="CONTENT") is allowed inside of the double-quotes.*
+      *CONTENT (field content) must not include any double-quote (").*
+      *MS Excel can read this.*
+
+       ```
+       aaa,"=""bbb""",ccc
+       ```
+
 
 ## Author
 
