@@ -28,7 +28,7 @@ Sub test()
     csvTextErr(2) = "aaa,bbb,ccc" & vbCrLf & "xxx,yyy" 'different field number
     
     ' success test data
-    csvText(0) = ",aaa,SP111SP,Ç†CRLF"""",""xxx"",SP""y,yy""SP,""SPz""""zCRLF""""zSP""SP"
+    csvText(0) = ",aaa,SP111SP,„ÅÇCRLF"""",""xxx"",SP""y,yy""SP,""SPz""""zCRLF""""zSP""SP"
     csvText(0) = Replace(csvText(0), "SP", " " & vbTab)
     csvText(0) = Replace(csvText(0), "CRLF", vbCrLf) ' no line break at EOF
     csvText(1) = csvText(0) & vbCrLf ' line break at EOF
@@ -41,7 +41,7 @@ Sub test()
     csvText(8) = vbCrLf & vbCrLf ' two records containing one blank field
     csvText(9) = vbCrLf & vbTab ' two records containing one blank field, one TAB field
     'For i = 0 To 3: Debug.Print "[" & csvText(i) & "]": Next
-    csvExpected(0) = Array(Array("", "aaa", "SP111SP", "Ç†"), Array("", "xxx", "y,yy", "SPz""zCRLF""zSP"))
+    csvExpected(0) = Array(Array("", "aaa", "SP111SP", "„ÅÇ"), Array("", "xxx", "y,yy", "SPz""zCRLF""zSP"))
     csvExpected(1) = Array(Array("", "", "", ""), Array("", "", "", ""))
     csvExpected(2) = Array(Array("", "", "", ""), Array("", "", "", ""))
     csvExpected(3) = Array(Array("", "", "", ""), Array("", "", "", ""))
@@ -189,3 +189,38 @@ NextTest:
     
 End Sub
 
+
+'
+'  Performance TEST
+'
+Sub PerfTest()
+  Dim flds(4) As String
+  Dim csv As String, csv0 As String
+  Dim i As Long, j As Long
+  Dim t As Single
+  Dim a As Variant
+  
+  csv = ""
+  flds(0) = "abcdefg,"
+  flds(1) = """hij,klmn"","
+  flds(2) = """123""""456"","
+  flds(3) = """opqrdtuv"","
+  For j = 1 To 100 'columns
+    csv = csv & flds(j Mod 4)
+  Next
+  csv = csv & vbCrLf
+  For i = 1 To 13
+    csv = csv & csv
+  Next
+  
+  Debug.Print "START: " & Len(csv) & " Bytes"
+  t = Timer
+  'Call ParseCSVToCollection(csv)
+  a = ParseCSVToArray(csv)
+  If Err.Number <> 0 Then MsgBox Err.Number & Err.Source & Err.Description
+  t = Timer - t
+  Debug.Print "END: " & t & " sec."
+  Debug.Print "records: " & UBound(a, 1) - 1
+  Debug.Print "fields:  " & UBound(a, 2) - 1
+
+End Sub
