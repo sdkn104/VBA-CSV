@@ -57,14 +57,12 @@ Head:
     Dim recordText As String
     Dim fieldText As String
     Dim recLen As Long
-    Dim regNL 'RegExp
-    Dim regField 'RegExp
+    Dim regField 'As regexp
     Dim mField 'Match
     Dim csvLines As Variant
     Dim fields As Collection
     Dim csvCollection As Collection
     Set csvCollection = New Collection 'empty collection
-    Set regNL = CreateObject("VBScript.RegExp")
     Set regField = CreateObject("VBScript.RegExp")
     
     Set ParseCSVToCollection = csvCollection
@@ -76,11 +74,10 @@ Head:
     If csvText = "" Then Exit Function 'return empty collection
     
     'Split into lines (leaving line break codes)
-    regNL.Pattern = "(\r\n|\r|\n)$"
-    csvTextTmp = regNL.Replace(csvText, "") 'delete line break code at EOF
-    regNL.Pattern = "(\r\n|\r|\n)"
-    regNL.Global = True
-    csvTextTmp = regNL.Replace(csvTextTmp, "$1_^`~_")
+    csvTextTmp = RemoveTrailingLineBreak(csvText)
+    csvTextTmp = Replace(csvTextTmp, vbLf, vbLf & "_^`~_")
+    csvTextTmp = Replace(csvTextTmp, vbCr, vbCr & "_^`~_")
+    csvTextTmp = Replace(csvTextTmp, vbCr & "_^`~_" & vbLf, vbCrLf)
     csvLines = Split(csvTextTmp, "_^`~_")
     If csvTextTmp = "" Then csvLines = Array("") 'since VBA Split() returns empty(zero length) array for ""
     csvLinesIdx = LBound(csvLines)
@@ -91,22 +88,31 @@ Head:
         recLen = 0
         Set fields = New Collection
         For Each mField In regField.Execute(recordText & ",")
-            recLen = recLen + Len(mField.value)
-            fieldText = regField.Replace(mField.value, "$2")
-            If fieldText = "" Then fieldText = regField.Replace(mField.value, "$4")
-            fieldText = Replace(fieldText, """""", """") 'un-escape
+        'For Each mField In Split(recordText, ",") '35% faster ParseCSVToArray()
+            'fieldText = mField
+            fieldText = mField.value
+            recLen = recLen + Len(fieldText)
+            'get content of the field
+            fieldText = Left(fieldText, Len(fieldText) - 1) 'trim trailing comma
+            If InStr(fieldText, """") > 0 Then
+              fieldText = TrimWhiteSpace(fieldText)
+              fieldText = Mid(fieldText, 2, Len(fieldText) - 2)
+              fieldText = Replace(fieldText, """""", """") 'un-escape double quote
+              If Left(fieldText, 2) = "=""" And Right(fieldText, 1) = """" Then fieldText = Mid(fieldText, 3, Len(fieldText) - 3) 'remove MS quote (="...")
+            End If
+            'add to collection
             fields.Add fieldText
         Next
         csvCollection.Add fields
         
-        If csvCollection(1).Count <> fields.Count Then
-            ErrorRaise 10001, "ParseCSVToCollection", "Syntax Error in CSV: numbers of fields are different among records"
-            GoTo ErrorExit
-        End If
-        If recLen <> Len(recordText) + 1 Then
-            ErrorRaise 10003, "ParseCSVToCollection", "Syntax Error in CSV: illegal field form"
-            GoTo ErrorExit
-        End If
+'        If csvCollection(1).Count <> fields.Count Then
+'            ErrorRaise 10001, "ParseCSVToCollection", "Syntax Error in CSV: numbers of fields are different among records"
+'            GoTo ErrorExit
+'        End If
+'        If recLen <> Len(recordText) + 1 Then
+'            ErrorRaise 10003, "ParseCSVToCollection", "Syntax Error in CSV: illegal field form"
+'            GoTo ErrorExit
+'        End If
     Loop
     If Err.Number <> 0 Then GoTo ErrorExit
     
@@ -134,6 +140,7 @@ Head:
     Dim recCnt As Long, fldCnt As Long
     Dim csvArray() As String
     Dim ri As Long, fi As Long
+    Dim rc As Variant, cc As Variant
     
     ParseCSVToArray = Null 'for error
   
@@ -154,10 +161,14 @@ Head:
     
     ' copy collection to array
     ReDim csvArray(1 To recCnt, 1 To fldCnt) As String
-    For ri = 1 To recCnt
-      For fi = 1 To fldCnt
-        csvArray(ri, fi) = csv(ri)(fi)
+    ri = 1
+    For Each rc In csv 'for each is faster for Collection
+      fi = 1
+      For Each cc In rc
+        csvArray(ri, fi) = cc
+        fi = fi + 1
       Next
+      ri = ri + 1
     Next
     
     ParseCSVToArray = csvArray
@@ -188,7 +199,7 @@ Head:
     End If
     
     ub2 = UBound(inArray, 2)
-    If Err.Number <> 0 Then 'expecting Err.Number = 9, Err.Description = "Subscript out of range"
+    If Err.Number <> 0 Then 'expecting Err.Number = 9, Err.Description = "Subscript out of range", for inArray is 1-dim
         GoTo ErrorExit
     End If
             
@@ -230,9 +241,6 @@ Private Function GetOneRecord(ByRef csvLines As Variant, ByRef csvLinesIdx As Lo
     Dim csvLinesIdxMax As Long
     Dim dQuateCnt As Long
     Dim lineText As String
-    Dim regNL
-    Set regNL = CreateObject("VBScript.RegExp")
-    regNL.Pattern = "(\r\n|\r|\n)$"
     csvLinesIdxMax = UBound(csvLines)
     
     recordText = ""
@@ -243,7 +251,7 @@ Private Function GetOneRecord(ByRef csvLines As Variant, ByRef csvLinesIdx As Lo
         dQuateCnt = dQuateCnt + StrCount(lineText, """") 'number of double quates in recordText
         csvLinesIdx = csvLinesIdx + 1
         If dQuateCnt Mod 2 = 0 Then  'if the number of double-quates is even, then the current field ends
-            recordText = regNL.Replace(recordText, "") 'remove the trailing line break code
+            recordText = RemoveTrailingLineBreak(recordText) 'remove the trailing line break code
             GetOneRecord = True
             Exit Function
         End If
@@ -270,3 +278,33 @@ Private Function StrCount(Source As String, Target As String) As Long
     StrCount = cnt
 End Function
 
+'
+' Trim spaces and tabs at head and tail
+'   * text MUST include one or more double-quotes (")
+Private Function TrimWhiteSpace(ByRef text As String) As String
+    'If InStr(text, """") = 0 Then Err.Raise 9999, "", "program error"
+    Dim p0 As Long, p1 As Long
+    Dim s As String
+    
+    'trim tail
+    For p1 = Len(text) To 1 Step -1
+      s = Mid(text, p1, 1)
+      If (s <> vbTab And s <> " ") Then Exit For
+    Next
+    'trim head
+    For p0 = 1 To p1
+      s = Mid(text, p0, 1)
+      If (s <> vbTab And s <> " ") Then Exit For
+    Next
+    'return
+    TrimWhiteSpace = Mid(text, p0, p1 - p0 + 1)
+End Function
+
+'
+' Remove trailing one line break ( vbCr, vbLf, or vbCrLf )
+'
+Private Function RemoveTrailingLineBreak(ByRef text As String) As String
+    RemoveTrailingLineBreak = text
+    If Right(RemoveTrailingLineBreak, 1) = vbLf Then RemoveTrailingLineBreak = Left(RemoveTrailingLineBreak, Len(RemoveTrailingLineBreak) - 1)
+    If Right(RemoveTrailingLineBreak, 1) = vbCr Then RemoveTrailingLineBreak = Left(RemoveTrailingLineBreak, Len(RemoveTrailingLineBreak) - 1)
+End Function
