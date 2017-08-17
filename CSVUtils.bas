@@ -105,14 +105,14 @@ Head:
         Next
         csvCollection.Add fields
         
-'        If csvCollection(1).Count <> fields.Count Then
-'            ErrorRaise 10001, "ParseCSVToCollection", "Syntax Error in CSV: numbers of fields are different among records"
-'            GoTo ErrorExit
-'        End If
-'        If recLen <> Len(recordText) + 1 Then
-'            ErrorRaise 10003, "ParseCSVToCollection", "Syntax Error in CSV: illegal field form"
-'            GoTo ErrorExit
-'        End If
+        If csvCollection(1).Count <> fields.Count Then
+            ErrorRaise 10001, "ParseCSVToCollection", "Syntax Error in CSV: numbers of fields are different among records"
+            GoTo ErrorExit
+        End If
+        If recLen <> Len(recordText) + 1 Then
+            ErrorRaise 10003, "ParseCSVToCollection", "Syntax Error in CSV: illegal field form"
+            GoTo ErrorExit
+        End If
     Loop
     If Err.Number <> 0 Then GoTo ErrorExit
     
