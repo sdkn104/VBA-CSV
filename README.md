@@ -6,6 +6,8 @@ The CSV (Comma-Separated Values) parsers read CSV text and return Collection or 
 * The parsers and writer are compliant with the CSV format defined in [RFC4180](http://www.ietf.org/rfc/rfc4180.txt), 
   which allows commas, line breaks, and double-quotes included in the fields.
 * Function test procedure, performance test procedure and Examples are included.
+* The parser takes about 3.7 sec. for 8MB CSV.
+* The writer takes about 0.9 sec. for 8MB CSV.
 
 ## Examples
 
@@ -78,6 +80,7 @@ If input text is zero-length (""), it returns empty array --- String(0 TO -1).
 If error occurs, it return the string "", and the error information is set in `Err` object.
 `fmtDate` is used as the argument of text formatting function [`Format`](https://msdn.microsoft.com/library/office/gg251755.aspx) 
 if an element of the array is `Date` type.
+Double-quotes are used only if it is necessary (the field includes double-quotes, comma, line breaks).
 
 #### SetCSVUtilsAnyErrorIsFatal(value As Boolean)
 
