@@ -6,6 +6,8 @@ Attribute VB_Name = "CSVUtils_Test"
 '
 ' License MIT (http://www.opensource.org/licenses/mit-license.php)
 '
+' フリーウェア
+'
 Option Explicit
 
 '
@@ -182,7 +184,7 @@ NextTest:
     Err.Clear
     Dim a(2) As String
     csvs = ConvertArrayToCSV(a)
-    If csvs <> "" Or Err.Number <> 9 Then Debug.Print "TEST NG 4a:" & Err.Number
+    If csvs <> "" Or Err.Number <> 9 Then Debug.Print "TEST NG 4b:" & Err.Number
     Err.Clear
     
     Debug.Print "----- End Testing ----------------"
@@ -213,14 +215,22 @@ Sub PerfTest()
     csv = csv & csv
   Next
   
-  Debug.Print "START: " & Len(csv) & " Bytes"
+  Debug.Print "START parser: " & Len(csv) & " Bytes"
   t = Timer
   'Call ParseCSVToCollection(csv)
   a = ParseCSVToArray(csv)
   If Err.Number <> 0 Then MsgBox Err.Number & Err.Source & Err.Description
   t = Timer - t
   Debug.Print "END: " & t & " sec."
-  Debug.Print "records: " & UBound(a, 1) - 1
-  Debug.Print "fields:  " & UBound(a, 2) - 1
+  Debug.Print " records: " & UBound(a, 1) - 1
+  Debug.Print " fields:  " & UBound(a, 2) - 1
+
+  Debug.Print "START writer:"
+  t = Timer
+  csv = ConvertArrayToCSV(a)
+  If Err.Number <> 0 Then MsgBox Err.Number & Err.Source & Err.Description
+  t = Timer - t
+  Debug.Print "END: " & t & " sec."
+
 
 End Sub
