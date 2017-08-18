@@ -192,18 +192,22 @@ Head:
     Dim r As Long, c As Long, ub2 As Long
     Dim v As Variant
     Dim cell As String
+    Dim arr As Variant
     
+    'error check
     If Not IsArray(inArray) Then
         ErrorRaise 10004, "ConvertArrayToCSV", "Input argument inArray is not array"
         GoTo ErrorExit
     End If
-    
     ub2 = UBound(inArray, 2)
     If Err.Number <> 0 Then 'expecting Err.Number = 9, Err.Description = "Subscript out of range", for inArray is 1-dim
         GoTo ErrorExit
     End If
-            
+
+    ReDim arr(LBound(inArray, 1) To UBound(inArray, 1)) As String 'temporary array
+    
     For r = LBound(inArray, 1) To UBound(inArray, 1)
+      csv = ""
       For c = LBound(inArray, 2) To UBound(inArray, 2)
         v = inArray(r, c)
         'formatting
@@ -222,10 +226,11 @@ Head:
           csv = csv & vbCrLf
         End If
       Next
+      arr(r) = csv
     Next
     If Err.Number <> 0 Then GoTo ErrorExit 'unexpected error
     
-    ConvertArrayToCSV = csv
+    ConvertArrayToCSV = Join(arr, "")
     Exit Function
 ErrorExit:
     ConvertArrayToCSV = ""
