@@ -26,7 +26,7 @@ Sub test()
     
     'error test data
     csvTextErr(0) = "aaa,""b""b"",ccc"  'illegal double quate
-    csvTextErr(1) = "aaa,b""""b,ccc"  'illegal field form (double quate in field)
+    csvTextErr(1) = "aaa,b""b,ccc"  'illegal field form (double quote in field)
     csvTextErr(2) = "aaa,bbb,ccc" & vbCrLf & "xxx,yyy" 'different field number
     
     ' success test data
@@ -116,11 +116,11 @@ NextTest:
         If IsNull(csva) Then Debug.Print "TEST NG"
         If Err.Number <> 0 Then Debug.Print "TEST NG"
         If Not (LBound(csva, 1) = 1 Or (LBound(csva, 1) = 0 And UBound(csva, 1) = -1)) Then Debug.Print "TEST NG illegal array bounds"
-        If UBound(csva, 1) - LBound(csva, 1) + 1 <> UBound(csvExpected(i)) + 1 Then Debug.Print "TEST NG row count"
+        If UBound(csva, 1) - LBound(csva, 1) + 1 <> UBound(csvExpected(i)) + 1 Then Debug.Print "TEST NG row count 2"
         For r = LBound(csva, 1) To UBound(csva, 1)
-          If LBound(csva, 2) <> 1 Or UBound(csva, 2) <> UBound(csvExpected(i)(r - 1)) + 1 Then Debug.Print "TEST NG col count"
+          If LBound(csva, 2) <> 1 Or UBound(csva, 2) <> UBound(csvExpected(i)(r - 1)) + 1 Then Debug.Print "TEST NG col count 2"
           For f = LBound(csva, 2) To UBound(csva, 2)
-            If csva(r, f) <> csvExpected(i)(r - 1)(f - 1) Then Debug.Print "TEST NG value"
+            If csva(r, f) <> csvExpected(i)(r - 1)(f - 1) Then Debug.Print "TEST NG value 2"
             'Debug.Print "[" & csva(r, f) & "]"
             'Debug.Print "[" & csvExpected(i)(r - 1)(f - 1) & "]"
           Next
@@ -140,10 +140,10 @@ NextTest:
     Err.Clear
 
     Set csv = ParseCSVToCollection(csvTextErr(1))
-    If Not csv Is Nothing Or Err.Number <> 10003 Then Debug.Print "TEST NG 1a:" & Err.Number
+    If Not csv Is Nothing Or Err.Number <> 10002 Then Debug.Print "TEST NG 1a:" & Err.Number
     Err.Clear
     csva = ParseCSVToArray(csvTextErr(1))
-    If Not IsNull(csva) Or Err.Number <> 10003 Then Debug.Print "TEST NG 1b:" & Err.Number
+    If Not IsNull(csva) Or Err.Number <> 10002 Then Debug.Print "TEST NG 1b:" & Err.Number
     Err.Clear
     
     Set csv = ParseCSVToCollection(csvTextErr(2))
