@@ -6,8 +6,9 @@ The CSV (Comma-Separated Values) parsers read CSV text and return Collection or 
 * The parsers and writer are compliant with the CSV format defined in [RFC4180](http://www.ietf.org/rfc/rfc4180.txt), 
   which allows commas, line breaks, and double-quotes included in the fields.
 * Function test procedure, performance test procedure and Examples are included.
-* The parser takes about 3.7 sec. for 8MB CSV.
-* The writer takes about 0.9 sec. for 8MB CSV.
+* The parser takes about 3 sec. for 8MB CSV, 8000 rows x 100 columns.
+* The writer takes about 1 sec. for 8MB CSV, 8000 rows x 100 columns.
+* The parsers do not fully check the syntax error.
 
 ## Examples
 
