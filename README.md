@@ -100,8 +100,7 @@ This function changes error handling mode for CSV parsers and writer.
 ## Installation
  
 1. Download the latest release
-2. Import CSVUtils.bas into your project (Open VBA Editor, Alt + F11; File > Import File)
-3. To enable RegExp, Add reference to "Microsoft VBScript Regular Expressions 5.5" (In VBA Editor, Tools > Reference Setting)
+2. Import CSVUtils.bas (and other \*.bas) into your project (Open VBA Editor, Alt + F11; File > Import File)
 
 ## Tested on
 
