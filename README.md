@@ -1,14 +1,15 @@
 VBA-CSV
 =======
 
-VBA-CSV provides CSV parsers and writer as VBA functions.
-The CSV (Comma-Separated Values) parsers read CSV text and return Collection or Array of the CSV table contents. The CSV writer converts 2-dimensional array to CSV text.
+VBA-CSV provides CSV (Comma-Separated Values) parsers and writer as VBA functions.
+The CSV parsers read CSV text and return Collection or Array of the CSV table contents.
+The CSV writer converts 2-dimensional array to CSV text.
 * The parsers and writer are compliant with the CSV format defined in [RFC4180](http://www.ietf.org/rfc/rfc4180.txt), 
   which allows commas, line breaks, and double-quotes included in the fields.
-* Function test procedure, performance test procedure and Examples are included.
+* Function test procedure, performance test procedure and examples are included.
 * The parser takes about 3 sec. for 8MB CSV, 8000 rows x 100 columns.
 * The writer takes about 1 sec. for 8MB CSV, 8000 rows x 100 columns.
-* The parsers do not fully check the syntax error.
+* The parsers do not fully check the syntax error (they parse correctly if the CSV has no syntax error).
 
 ## Examples
 
@@ -55,9 +56,9 @@ If error occurs, it returns `Nothing` and the error information is set in `Err` 
     Next
 ```
 
-`ParseCSVToArray()` returns a Variant that contains 2-dimensional array --- String(1 TO recordCount, 1 TO fieldCount).
+`ParseCSVToArray()` returns a Variant that contains 2-dimensional array - `String(1 To recordCount, 1 To fieldCount)`.
 If error occurs, it returns `Null` and the error information is set in `Err` object.
-If input text is zero-length (""), it returns empty array --- String(0 TO -1).
+If input text is zero-length (""), it returns empty array - `String(0 To -1)`.
 
 #### ConvertArrayToCSV(inArray as Variant, Optional fmtDate As String = "yyyy/m/d") As String
 
@@ -81,7 +82,8 @@ If input text is zero-length (""), it returns empty array --- String(0 TO -1).
 If error occurs, it return the string "", and the error information is set in `Err` object.
 `fmtDate` is used as the argument of text formatting function [`Format`](https://msdn.microsoft.com/library/office/gg251755.aspx) 
 if an element of the array is `Date` type.
-Double-quotes are used only if it is necessary (the field includes double-quotes, comma, line breaks).
+* Double-quotes are used only if it is necessary (the field includes double-quotes, comma, line breaks).
+* CRLF is used as record separastor.
 
 #### SetCSVUtilsAnyErrorIsFatal(value As Boolean)
 
@@ -92,10 +94,9 @@ Double-quotes are used only if it is necessary (the field includes double-quotes
 
 This function changes error handling mode for CSV parsers and writer.
 
-**False (default)** --- When run-time error occurs, the parser function returns special value (Nothing,  Null, etc.),
-                    and the error information is set to properties of Err object.
-
-**True**            --- Any run-time error that occurs is fatal (an error message is displayed and execution stops).
+**False (default)** - When run-time error occurs, the parser function returns special value (`Nothing`,  `Null`, etc.), 
+                      and the error information is set to properties of `Err` object.    
+**True**            - Any run-time error that occurs is fatal (an error message is displayed and execution stops).
 
 ## Installation
  
@@ -104,8 +105,8 @@ This function changes error handling mode for CSV parsers and writer.
 
 ## Tested on
 
-* Excel 2000
-* Excel 2013
+* MS Excel 2000 on Windows 10
+* MS Excel 2013 on Windows 7
 
 ## The CSV File format
 
