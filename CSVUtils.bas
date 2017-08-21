@@ -72,9 +72,6 @@ Head:
         recordTextComma = recordText & ","
         Do While FindNextSeparator(recordTextComma, recordPos, fieldText, ",")
             If InStr(fieldText, """") > 0 Then
-              'fieldText = TrimWhiteSpace(fieldText)
-              'If Left(fieldText, 1) <> """" Or Right(fieldText, 1) <> """" Then ErrorRaise 10003, "ParseCSVToCollection", "Syntax Error in CSV: illegal double-quote"
-              'fieldText = Mid(fieldText, 2, Len(fieldText) - 2)
               fieldText = TrimQuotes(fieldText) 'get internal of double-quotes
               fieldText = Replace(fieldText, """""", """") 'un-escape double quote
               If Left(fieldText, 2) = "=""" And Right(fieldText, 1) = """" Then fieldText = Mid(fieldText, 3, Len(fieldText) - 3) 'remove MS quote (="...")
@@ -270,28 +267,6 @@ Private Function StrCount(Source As String, Target As String, p0 As Long, p1 As 
         cnt = cnt + 1
     Loop
     StrCount = cnt
-End Function
-
-'
-' Trim spaces and tabs at head and tail
-'   * text MUST include one or more double-quotes (")
-Private Function TrimWhiteSpace(ByRef text As String) As String
-    'If InStr(text, """") = 0 Then Err.Raise 9999, "", "program error"
-    Dim p0 As Long, p1 As Long
-    Dim s As String
-    
-    'trim tail
-    For p1 = Len(text) To 1 Step -1
-      s = Mid(text, p1, 1)
-      If (s <> vbTab And s <> " ") Then Exit For
-    Next
-    'trim head
-    For p0 = 1 To p1
-      s = Mid(text, p0, 1)
-      If (s <> vbTab And s <> " ") Then Exit For
-    Next
-    'return
-    TrimWhiteSpace = Mid(text, p0, p1 - p0 + 1)
 End Function
 
 '
