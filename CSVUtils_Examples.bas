@@ -48,7 +48,7 @@ End Sub
 
 
 '
-' Example for ParseCSVToArray()
+' Example for ConvertArrayToCSV()
 '
 Sub Example3()
     Dim csv As String
@@ -67,14 +67,19 @@ Sub Example3()
 End Sub
 
 '
-' Example for usage of readCSVFile() and debugPrintResults()
+' Example for convert Excel Range to CSV, and writeFile(),
+'             then readFile() and ParseCSV
 '
 Sub Example4()
     Dim text As String
     Dim csv As Variant
+    Dim arr As Variant
+        
+    arr = ActiveSheet.Range("A1:C2")
+    text = ConvertArrayToCSV(arr)
+    Call writeFile("C:\Users\sdkn1\Desktop\Book1.csv", text)
 
-    text = readCSVFile("C:\Users\sdkn1\Desktop\Book1.csv")
-    'text = "aaa,bbb,ccc" & vbCr & "xxx,yyy,zzz"
+    text = readFile("C:\Users\sdkn1\Desktop\Book1.csv")
     Set csv = ParseCSVToCollection(text)
     debugPrintResults csv
     csv = ParseCSVToArray(text)
@@ -85,15 +90,27 @@ End Sub
 '
 ' read text file and return String
 '
-Function readCSVFile(fileName As String) As String
+Function readFile(fileName As String) As String
     Dim FSO As Object
     Set FSO = CreateObject("Scripting.FileSystemObject")
     With FSO.GetFile(fileName).OpenAsTextStream
-        readCSVFile = .ReadAll
+        readFile = .ReadAll
         .Close
     End With
 End Function
 
+
+'
+' write text to file
+'
+Sub writeFile(fileName As String, text As String)
+    Dim FSO As Object
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+    With FSO.CreateTextFile(fileName, True, False)
+        .Write text
+        .Close
+    End With
+End Sub
 
 
 '
