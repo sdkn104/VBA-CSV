@@ -14,7 +14,6 @@ Option Explicit
 Private CSVUtilsAnyErrorIsFatal As Boolean  'default False
 
 
-
 '----- ERROR HANDLER ----------------------------------------------------------------
 
 '
@@ -70,7 +69,7 @@ Head:
         Set fields = New Collection
         recordPos = 1
         recordTextComma = recordText & ","
-        Do While FindNextSeparator(recordTextComma, recordPos, fieldText, ",")
+        Do While FindNextSeparator(recordTextComma, recordPos, fieldText, ",", "")
             If InStr(fieldText, """") > 0 Then
               fieldText = TrimQuotes(fieldText) 'get internal of double-quotes
               fieldText = Replace(fieldText, """""", """") 'un-escape double quote
@@ -81,7 +80,7 @@ Head:
         Loop
         csvCollection.Add fields
         
-        If csvCollection(1).Count <> fields.Count Then
+        If csvCollection.Item(1).Count <> fields.Count Then
             ErrorRaise 10001, "ParseCSVToCollection", "Syntax Error in CSV: numbers of fields are different among records"
             GoTo ErrorExit
         End If
@@ -129,7 +128,7 @@ Head:
                                          '(https://msdn.microsoft.com/ja-jp/library/office/gg278528.aspx)
         Exit Function
     End If
-    fldCnt = csv(1).Count
+    fldCnt = csv.Item(1).Count
     
     ' copy collection to array
     ReDim csvArray(1 To recCnt, 1 To fldCnt) As String
@@ -176,6 +175,7 @@ Head:
         GoTo ErrorExit
     End If
 
+    Dim rc As Long, cc As Long
     ReDim arrRecord(LBound(inArray, 1) To UBound(inArray, 1)) As String 'temporary array
     ReDim arrField(LBound(inArray, 2) To UBound(inArray, 2)) As String 'temporary array
     
@@ -291,3 +291,37 @@ Private Function TrimQuotes(ByRef text As String) As String
     TrimQuotes = Mid(text, p0 + 1, p1 - p0 - 1)
 End Function
 
+
+'Definitions for VBScript
+#If 0 Then
+Function Mid(t, s, l)
+  Mid = Left(t, s + l - 1)
+  Mid = Right(Mid, l)
+End Function
+
+Function Format(date, fmt)
+  r = fmt
+  r = Replace(r, "yyyy", Year(Date))
+  r = Replace(r, "mm", Left("0" & Month(Date), 2))
+  r = Replace(r, "dd", Left("0" & Day(Date), 2))
+  r = Replace(r, "m", "" & Month(Date))
+  r = Replace(r, "d", "" & Day(Date))
+  Format = r
+End Function
+
+Class Collection
+  Dim Item(100000)
+  Dim Count
+  Sub Class_Initialize()
+    Count = 0
+  End Sub
+  Sub Add(val)
+    Count = Count + 1
+    If IsObject(val) Then
+      Set Item(Count) = val
+    Else
+      Item(Count) = val
+    End If
+  End Sub
+End Class
+#End If

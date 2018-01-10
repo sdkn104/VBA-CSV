@@ -10,6 +10,9 @@ Attribute VB_Name = "CSVUtils_Test"
 '
 Option Explicit
 
+
+Const IsVBA As Boolean = True
+
 '
 ' Automatic TEST Procesure
 '
@@ -63,51 +66,58 @@ Sub test()
     csvExpected(8) = Array(Array(""), Array(""))
     csvExpected(9) = Array(Array(""), Array(vbTab))
       
-    Debug.Print "----- Testing default error raise mode ----------------"
-    
-    ' In default, disable raising error
-    ' one error for each function
-    Err.Clear
-    Set csv = ParseCSVToCollection(csvTextErr(0))
-    If Not csv Is Nothing Or Err.Number <> 10002 Then Debug.Print "TEST NG 0a:" & Err.Number
-    Err.Clear
-    csva = ParseCSVToArray(csvTextErr(0))
-    If Not IsNull(csva) Or Err.Number <> 10002 Then Debug.Print "TEST NG 0b:" & Err.Number
-    Err.Clear
-    Dim s As String
-    csvs = ConvertArrayToCSV(s)
-    If csvs <> "" Or Err.Number <> 10004 Then Debug.Print "TEST NG 0c:" & Err.Number
-    Err.Clear
-                
-    Debug.Print "----- Testing error raise mode = AnyErrIsFatal ----------------"
-    
-    ' enabled raising error
-    ' one error for each function
-    Dim errorCnt As Long
-    SetCSVUtilsAnyErrorIsFatal True 'enable
-    On Error GoTo ErrCatch
-    Set csv = ParseCSVToCollection(csvTextErr(0))
-    csva = ParseCSVToArray(csvTextErr(0))
-    csvs = ConvertArrayToCSV(s)
-    GoTo NextTest
-ErrCatch:
-    errorCnt = errorCnt + 1
-    If Err.Number <> 10002 And Err.Number <> 10004 Then Debug.Print "TEST NG 3:" & Err.Number
-    Resume Next
-NextTest:
-    If errorCnt <> 3 Then Debug.Print "TEST NG 4:" & errorCnt
-    On Error GoTo 0
+    If IsVBA Then
+        Debug.Print "----- Testing default error raise mode ----------------"
         
+        ' In default, disable raising error
+        ' one error for each function
+        Err.Clear
+        Set csv = ParseCSVToCollection(csvTextErr(0))
+        If Not csv Is Nothing Or Err.Number <> 10002 Then Debug.Print "TEST NG 0a:" & Err.Number
+        Err.Clear
+        csva = ParseCSVToArray(csvTextErr(0))
+        If Not IsNull(csva) Or Err.Number <> 10002 Then Debug.Print "TEST NG 0b:" & Err.Number
+        Err.Clear
+        Dim s As String
+        csvs = ConvertArrayToCSV(s)
+        If csvs <> "" Or Err.Number <> 10004 Then Debug.Print "TEST NG 0c:" & Err.Number
+        Err.Clear
+    End If
+                
+    If IsVBA Then
+        Debug.Print "----- Testing error raise mode = AnyErrIsFatal ----------------"
+        
+        ' enabled raising error
+        ' one error for each function
+        Dim errorCnt As Long
+        SetCSVUtilsAnyErrorIsFatal True 'enable
+        On Error GoTo ErrCatch
+        Set csv = ParseCSVToCollection(csvTextErr(0))
+        csva = ParseCSVToArray(csvTextErr(0))
+        csvs = ConvertArrayToCSV(s)
+        GoTo NextTest
+ErrCatch:
+        errorCnt = errorCnt + 1
+        If Err.Number <> 10002 And Err.Number <> 10004 Then Debug.Print "TEST NG 3:" & Err.Number
+        Resume Next
+NextTest:
+        If errorCnt <> 3 Then Debug.Print "TEST NG 4:" & errorCnt
+        On Error GoTo 0
+    End If
+    
     Debug.Print "----- Testing success data for parseXXXX() -------------------"
+    Dim arrStart As Long
+    arrStart = 1
+    If Not IsVBA Then arrStart = 0
     For i = 0 To 9
         Set csv = ParseCSVToCollection(csvText(i))
         If csv Is Nothing Then Debug.Print "TEST NG"
         If Err.Number <> 0 Then Debug.Print "TEST NG"
         If csv.Count <> UBound(csvExpected(i)) + 1 Then Debug.Print "TEST NG row count"
         For r = 1 To csv.Count
-          If csv(r).Count <> UBound(csvExpected(i)(r - 1)) + 1 Then Debug.Print "TEST NG col count"
-          For f = 1 To csv(r).Count
-            If csv(r)(f) <> csvExpected(i)(r - 1)(f - 1) Then Debug.Print "TEST NG value"
+          If csv.Item(r).Count <> UBound(csvExpected(i)(r - 1)) + 1 Then Debug.Print "TEST NG col count"
+          For f = 1 To csv.Item(r).Count
+            If csv.Item(r).Item(f) <> csvExpected(i)(r - 1)(f - 1) Then Debug.Print "TEST NG value"
             'Debug.Print "[" & csv(r)(f) & "]"
           Next
         Next
@@ -115,77 +125,86 @@ NextTest:
         csva = ParseCSVToArray(csvText(i))
         If IsNull(csva) Then Debug.Print "TEST NG"
         If Err.Number <> 0 Then Debug.Print "TEST NG"
-        If Not (LBound(csva, 1) = 1 Or (LBound(csva, 1) = 0 And UBound(csva, 1) = -1)) Then Debug.Print "TEST NG illegal array bounds"
+        If Not (LBound(csva, 1) = arrStart Or (LBound(csva, 1) = 0 And UBound(csva, 1) = -1)) Then Debug.Print "TEST NG illegal array bounds"
         If UBound(csva, 1) - LBound(csva, 1) + 1 <> UBound(csvExpected(i)) + 1 Then Debug.Print "TEST NG row count 2"
         For r = LBound(csva, 1) To UBound(csva, 1)
-          If LBound(csva, 2) <> 1 Or UBound(csva, 2) <> UBound(csvExpected(i)(r - 1)) + 1 Then Debug.Print "TEST NG col count 2"
+          If LBound(csva, 2) <> arrStart Or UBound(csva, 2) <> UBound(csvExpected(i)(r - arrStart)) + arrStart Then Debug.Print "TEST NG col count 2"
           For f = LBound(csva, 2) To UBound(csva, 2)
-            If csva(r, f) <> csvExpected(i)(r - 1)(f - 1) Then Debug.Print "TEST NG value 2"
+            If csva(r, f) <> csvExpected(i)(r - arrStart)(f - arrStart) Then Debug.Print "TEST NG value 2"
             'Debug.Print "[" & csva(r, f) & "]"
             'Debug.Print "[" & csvExpected(i)(r - 1)(f - 1) & "]"
           Next
         Next
     Next
 
-    Debug.Print "----- Testing error data  for parseXXXX() ----------------"
-
-    SetCSVUtilsAnyErrorIsFatal False 'disable
+    If IsVBA Then
+        Debug.Print "----- Testing error data  for parseXXXX() ----------------"
     
-    Err.Clear
-    Set csv = ParseCSVToCollection(csvTextErr(0))
-    If Not csv Is Nothing Or Err.Number <> 10002 Then Debug.Print "TEST NG 0a:" & Err.Number
-    Err.Clear
-    csva = ParseCSVToArray(csvTextErr(0))
-    If Not IsNull(csva) Or Err.Number <> 10002 Then Debug.Print "TEST NG 0b:" & Err.Number
-    Err.Clear
-
-    Set csv = ParseCSVToCollection(csvTextErr(1))
-    If Not csv Is Nothing Or Err.Number <> 10002 Then Debug.Print "TEST NG 1a:" & Err.Number
-    Err.Clear
-    csva = ParseCSVToArray(csvTextErr(1))
-    If Not IsNull(csva) Or Err.Number <> 10002 Then Debug.Print "TEST NG 1b:" & Err.Number
-    Err.Clear
+        SetCSVUtilsAnyErrorIsFatal False 'disable
+        
+        Err.Clear
+        Set csv = ParseCSVToCollection(csvTextErr(0))
+        If Not csv Is Nothing Or Err.Number <> 10002 Then Debug.Print "TEST NG 0a:" & Err.Number
+        Err.Clear
+        csva = ParseCSVToArray(csvTextErr(0))
+        If Not IsNull(csva) Or Err.Number <> 10002 Then Debug.Print "TEST NG 0b:" & Err.Number
+        Err.Clear
     
-    Set csv = ParseCSVToCollection(csvTextErr(2))
-    If Not csv Is Nothing Or Err.Number <> 10001 Then Debug.Print "TEST NG 2a:" & Err.Number
-    Err.Clear
-    csva = ParseCSVToArray(csvTextErr(2))
-    If Not IsNull(csva) Or Err.Number <> 10001 Then Debug.Print "TEST NG 2b:" & Err.Number
-    Err.Clear
+        Set csv = ParseCSVToCollection(csvTextErr(1))
+        If Not csv Is Nothing Or Err.Number <> 10002 Then Debug.Print "TEST NG 1a:" & Err.Number
+        Err.Clear
+        csva = ParseCSVToArray(csvTextErr(1))
+        If Not IsNull(csva) Or Err.Number <> 10002 Then Debug.Print "TEST NG 1b:" & Err.Number
+        Err.Clear
+        
+        Set csv = ParseCSVToCollection(csvTextErr(2))
+        If Not csv Is Nothing Or Err.Number <> 10001 Then Debug.Print "TEST NG 2a:" & Err.Number
+        Err.Clear
+        csva = ParseCSVToArray(csvTextErr(2))
+        If Not IsNull(csva) Or Err.Number <> 10001 Then Debug.Print "TEST NG 2b:" & Err.Number
+        Err.Clear
+    End If
     
     Debug.Print "----- Testing success data for ConvertArrayToCSV() -------------------"
     
     'including comma, double-quote, cr, lf, crlf, space
     s = "aaa , bbb,ccc" & vbCrLf & """x,xx"",""y""""yy"",""zz" & vbCr & "z""" & vbCrLf & """aa" & vbLf & "a"",""bb" & vbCrLf & "b"",ccc" & vbCrLf
-    csvs = ConvertArrayToCSV(ParseCSVToArray(s))
+    csva = ParseCSVToArray(s)
+    csvs = ConvertArrayToCSV(csva)
     If Err.Number <> 0 Or csvs <> s Then Debug.Print "TEST NG 3a"
-    'array range not starts with 1
-    Dim aa1(0 To 1, 2 To 3) As String
-    aa1(0, 2) = 1: aa1(1, 3) = 1
-    csvs = ConvertArrayToCSV(aa1)
-    If Err.Number <> 0 Or csvs <> "1," & vbCrLf & ",1" & vbCrLf Then Debug.Print "TEST NG 3b"
-    Dim aa2(2 To 3, 0 To 1) As String
-    aa2(2, 0) = 1: aa2(3, 1) = 1
-    csvs = ConvertArrayToCSV(aa2)
-    If Err.Number <> 0 Or csvs <> "1," & vbCrLf & ",1" & vbCrLf Then Debug.Print "TEST NG 3c"
+    If IsVBA Then
+        'array range not starts with 1 'this is not needed for VBScript
+        Dim aa1() As String
+        ReDim aa1(0 To 1, 2 To 3) As String
+        aa1(0, 2) = 1: aa1(1, 3) = 1
+        csvs = ConvertArrayToCSV(aa1)
+        If Err.Number <> 0 Or csvs <> "1," & vbCrLf & ",1" & vbCrLf Then Debug.Print "TEST NG 3b"
+        Dim aa2() As String
+        ReDim aa2(2 To 3, 0 To 1) As String
+        aa2(2, 0) = 1: aa2(3, 1) = 1
+        csvs = ConvertArrayToCSV(aa2)
+        If Err.Number <> 0 Or csvs <> "1," & vbCrLf & ",1" & vbCrLf Then Debug.Print "TEST NG 3c"
+    End If
     'Date type formatting
-    Dim aa3(1 To 1, 1 To 2) As Variant
-    aa3(1, 1) = DateSerial(2020, 1, 9)
+    Dim aa3(0, 1) As Variant
+    aa3(0, 0) = DateSerial(2020, 1, 9)
     csvs = ConvertArrayToCSV(aa3)
     If Err.Number <> 0 Or csvs <> "2020/1/9," & vbCrLf Then Debug.Print "TEST NG 3d"
     csvs = ConvertArrayToCSV(aa3, "yyyy/mm/dd")
     If Err.Number <> 0 Or csvs <> "2020/01/09," & vbCrLf Then Debug.Print "TEST NG 3e"
     
-    Debug.Print "----- Testing error data for ConvertArrayToCSV() -------------------"
-    
-    Err.Clear
-    csvs = ConvertArrayToCSV(s)
-    If csvs <> "" Or Err.Number <> 10004 Then Debug.Print "TEST NG 4a:" & Err.Number
-    Err.Clear
-    Dim a(2) As String
-    csvs = ConvertArrayToCSV(a)
-    If csvs <> "" Or Err.Number <> 9 Then Debug.Print "TEST NG 4b:" & Err.Number
-    Err.Clear
+    If IsVBA Then
+        Debug.Print "----- Testing error data for ConvertArrayToCSV() -------------------"
+        
+        Err.Clear
+        csvs = ConvertArrayToCSV(s)
+        If csvs <> "" Or Err.Number <> 10004 Then Debug.Print "TEST NG 4a:" & Err.Number
+        Err.Clear
+        Dim a(2) As String
+        csvs = ConvertArrayToCSV(a)
+        If csvs <> "" Or Err.Number <> 9 Then Debug.Print "TEST NG 4b:" & Err.Number
+        Err.Clear
+    End If
     
     Debug.Print "----- End Testing ----------------"
     
