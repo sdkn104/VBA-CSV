@@ -100,6 +100,14 @@ Function readFile(Filename, Optional Encoding = "UTF-8") As String
     End With
 End Function
 
+Function readFile2(Filename As String) As String
+    Dim FSO As Object
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+    With FSO.GetFile(Filename).OpenAsTextStream
+        readFile = .ReadAll
+        .Close
+    End With
+End Function
 
 '
 ' write text to file
