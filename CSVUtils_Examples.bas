@@ -90,11 +90,12 @@ End Sub
 '
 ' read text file and return String
 '
-Function readFile(fileName As String) As String
-    Dim FSO As Object
-    Set FSO = CreateObject("Scripting.FileSystemObject")
-    With FSO.GetFile(fileName).OpenAsTextStream
-        readFile = .ReadAll
+Function readFile(Filename, Optional Encoding = "UTF-8") As String
+    With CreateObject("ADODB.Stream")
+        .Open
+        .Charset = Encoding
+        .LoadFromFile Filename
+        readFile = .ReadText
         .Close
     End With
 End Function
