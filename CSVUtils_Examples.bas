@@ -112,11 +112,26 @@ End Function
 '
 ' write text to file
 '
-Sub writeFile(fileName As String, text As String)
+Sub writeFile(fileName As String, text As String, Optional iomode As Long = 2)
     Dim FSO As Object
     Set FSO = CreateObject("Scripting.FileSystemObject")
-    With FSO.CreateTextFile(fileName, True, False)
+    If Not FSO.FileExists(fileName) Then
+      Call FSO.CreateTextFile(fileName, True, False)
+    End If
+    With FSO.OpenTextFile(fileName, iomode, TristateFalse) 'iomode:ForWriting(2),ForAppending(8);  format:TristateFalse(ASCII=ShiftJIS),TristateTrue(utf16)
         .Write text
+        .Close
+    End With
+End Sub
+
+Sub writeFile2(fileName As String, text As String, Optional Encoding As String = "UTF-8")
+    With CreateObject("ADODB.Stream")
+        .Mode = 3 'adModeReadWrite(3),...
+        .Type = 2 'adTypeText(2), adTypeBinary(1)
+        .Charset = Encoding '"UTF-8", "Shift_JIS", ...
+        .Open
+        .WriteText text, adWriteChar
+        .SaveToFile fileName, 2 '2:adSaveCreateOverWrite
         .Close
     End With
 End Sub
