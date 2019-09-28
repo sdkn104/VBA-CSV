@@ -3,16 +3,27 @@ Attribute VB_Name = "CSVUtils"
 ' VBA-CSV
 '
 ' Copyright (C) 2017- sdkn104 ( https://github.com/sdkn104/VBA-CSV/ )
-'
 ' License MIT (http://www.opensource.org/licenses/mit-license.php)
 '
 Option Explicit
 
+'----- Enum -------------------------------------------------------------------------
+
+Public Enum CSVUtilsQuote
+  MINIMAL = 0
+  ALL = 1
+  NONNUMERIC = 2
+End Enum
+
+Public Enum CSVUtilsTyping
+  QUOTE_STRING = 0
+  ALL_STRING = 1
+  NONNUMERIC_STRING = 2
+End Enum
 
 '----- Global variables -------------------------------------------------------------
 
 Private CSVUtilsAnyErrorIsFatal As Boolean  'default False
-
 
 '----- ERROR HANDLER ----------------------------------------------------------------
 
@@ -44,7 +55,8 @@ End Sub
 '   Return a Collection of records each of which is a Collection of fields
 '   When error, return Nothing
 '
-Public Function ParseCSVToCollection(ByRef csvText As String) As Collection
+  Public Function ParseCSVToCollection(ByRef csvText As String, _
+      Optional ByVal typing As CSVUtilsTyping = CSVUtilsTyping.ALL_STRING) As Collection
     ' "On Error Resume Next" only if CSVUtilsAnyErrorIsFatal is True
     Err.Clear
     If CSVUtilsAnyErrorIsFatal Then GoTo Head
@@ -101,7 +113,8 @@ End Function
 '  When CSV text is "", return empty array --- String(0 TO -1)
 '  When error, return Null
 '
-Public Function ParseCSVToArray(ByRef csvText As String) As Variant
+Public Function ParseCSVToArray(ByRef csvText As String, _
+      Optional ByVal typing As CSVUtilsTyping = CSVUtilsTyping.ALL_STRING) ) As Variant
     ' "On Error Resume Next" only if CSVUtilsAnyErrorIsFatal is True
     Err.Clear
     If CSVUtilsAnyErrorIsFatal Then GoTo Head
@@ -153,7 +166,9 @@ End Function
 '  fmtDate : format used for conversion from type Date to type String
 '  When error, return ""
 '
-Public Function ConvertArrayToCSV(inArray As Variant, Optional fmtDate As String = "yyyy/m/d") As String
+Public Function ConvertArrayToCSV(inArray As Variant, Optional fmtDate As String = "yyyy/m/d", _
+                          Optional ByVal quote As CSVUtilsQuote = CSVUtilsQuote.MINIMAL, _
+                          Optional ByVal recordSeparator As String = vbCrLf) As String
     ' "On Error Resume Next" only if CSVUtilsAnyErrorIsFatal is True
     Err.Clear
     If CSVUtilsAnyErrorIsFatal Then GoTo Head
