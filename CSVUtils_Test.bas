@@ -25,7 +25,7 @@ Sub test()
     Dim i As Long, r As Long, f As Long
     Dim csv As Collection
     Dim csva
-    Dim csvs As String
+    Dim csvs As String, csvs2 As String
     
     'error test data
     csvTextErr(0) = "aaa,""b""b"",ccc"  'illegal double quate
@@ -110,7 +110,7 @@ NextTest:
     arrStart = 1
     If Not IsVBA Then arrStart = 0
     For i = 0 To 9
-        Set csv = ParseCSVToCollection(csvText(i))
+        Set csv = ParseCSVToCollection(csvText(i), False)
         If csv Is Nothing Then Debug.Print "TEST NG"
         If Err.Number <> 0 Then Debug.Print "TEST NG"
         If csv.Count <> UBound(csvExpected(i)) + 1 Then Debug.Print "TEST NG row count"
@@ -122,7 +122,7 @@ NextTest:
           Next
         Next
         
-        csva = ParseCSVToArray(csvText(i))
+        csva = ParseCSVToArray(csvText(i), False)
         If IsNull(csva) Then Debug.Print "TEST NG"
         If Err.Number <> 0 Then Debug.Print "TEST NG"
         If Not (LBound(csva, 1) = arrStart Or (LBound(csva, 1) = 0 And UBound(csva, 1) = -1)) Then Debug.Print "TEST NG illegal array bounds"
@@ -167,10 +167,10 @@ NextTest:
     
     Debug.Print "----- Testing success data for ConvertArrayToCSV() -------------------"
     
-    'including comma, double-quote, cr, lf, crlf, space
+    'fields including comma, double-quote, cr, lf, crlf, space
     s = "aaa , bbb,ccc" & vbCrLf & """x,xx"",""y""""yy"",""zz" & vbCr & "z""" & vbCrLf & """aa" & vbLf & "a"",""bb" & vbCrLf & "b"",ccc" & vbCrLf
-    csva = ParseCSVToArray(s)
-    csvs = ConvertArrayToCSV(csva)
+    csva = ParseCSVToArray(s, False)
+    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
     If Err.Number <> 0 Or csvs <> s Then Debug.Print "TEST NG 3a"
     If IsVBA Then
         'array range not starts with 1 'this is not needed for VBScript
@@ -188,10 +188,40 @@ NextTest:
     'Date type formatting
     Dim aa3(0, 1) As Variant
     aa3(0, 0) = DateSerial(2020, 1, 9)
-    csvs = ConvertArrayToCSV(aa3)
+    If IsVBA Then '---- omit argument
+        csvs = ConvertArrayToCSV(aa3)
+        If Err.Number <> 0 Or csvs <> "2020/1/9," & vbCrLf Then Debug.Print "TEST NG 3d"
+    End If
+    csvs = ConvertArrayToCSV(aa3, "yyyy/m/d", MINIMAL, vbCrLf)
     If Err.Number <> 0 Or csvs <> "2020/1/9," & vbCrLf Then Debug.Print "TEST NG 3d"
-    csvs = ConvertArrayToCSV(aa3, "yyyy/mm/dd")
+    csvs = ConvertArrayToCSV(aa3, "yyyy/mm/dd", MINIMAL, vbCrLf)
     If Err.Number <> 0 Or csvs <> "2020/01/09," & vbCrLf Then Debug.Print "TEST NG 3e"
+    'recordSeparator (line terminator)
+    s = "aa,bb" & vbCrLf & "cc,dd" & vbCrLf
+    csva = ParseCSVToArray(s, False)
+    If IsVBA Then '---- omit arg
+       csvs = ConvertArrayToCSV(csva)
+        If Err.Number <> 0 Or csvs <> s Then Debug.Print "TEST NG 3f"
+    End If
+    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
+    If Err.Number <> 0 Or csvs <> s Then Debug.Print "TEST NG 3g"
+    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, "xxx")
+    If Err.Number <> 0 Or csvs <> "aa,bbxxxcc,ddxxx" Then Debug.Print "TEST NG 3h"
+    ' quoting
+    s = "012,12.43,1e3," & vbCrLf & "aaa,""a,b"","""""""",""" & vbCr & """" & vbCrLf
+    csva = ParseCSVToArray(s, False)
+    If IsVBA Then '---- omit arg
+        csvs = ConvertArrayToCSV(csva)
+        If Err.Number <> 0 Or csvs <> s Then Debug.Print "TEST NG 3i"
+    End If
+    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
+    If Err.Number <> 0 Or csvs <> s Then Debug.Print "TEST NG 3j"
+    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", ALL, vbCrLf)
+    s = """012"",""12.43"",""1e3"",""""" & vbCrLf & """aaa"",""a,b"","""""""",""" & vbCr & """" & vbCrLf
+    If Err.Number <> 0 Or csvs <> s Then Debug.Print "TEST NG 3k"
+    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", NONNUMERIC, vbCrLf)
+    s = "012,12.43,1e3,""""" & vbCrLf & """aaa"",""a,b"","""""""",""" & vbCr & """" & vbCrLf
+    If Err.Number <> 0 Or csvs <> s Then Debug.Print "TEST NG 3l"
     
     If IsVBA Then
         Debug.Print "----- Testing error data for ConvertArrayToCSV() -------------------"
@@ -203,6 +233,35 @@ NextTest:
         Dim a(2) As String
         csvs = ConvertArrayToCSV(a)
         If csvs <> "" Or Err.Number <> 9 Then Debug.Print "TEST NG 4b:" & Err.Number
+        Err.Clear
+    End If
+    
+    Debug.Print "----- Other Testing -------------------"
+    ' allowVariableNumOfFields for parseXXXX()
+    s = "012,12.43,1e3," & vbCrLf & "aaa,ab,,ccc" & vbCrLf ' not variable data
+    csva = ParseCSVToArray(s, False)
+    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
+    If IsVBA Then '---- omit argument
+        csva = ParseCSVToArray(s)
+        csvs2 = ConvertArrayToCSV(csva)
+        If Err.Number <> 0 Or csvs <> csvs2 Then Debug.Print "TEST NG 5a"
+    End If
+    csva = ParseCSVToArray(s, True)
+    csvs2 = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
+    If Err.Number <> 0 Or csvs <> csvs2 Then Debug.Print "TEST NG 5b"
+    s = "012,12.43,1e3" & vbCrLf & "aaa,ab,,ccc" & vbCrLf ' variable data
+    csva = ParseCSVToArray(s, True)
+    If Err.Number <> 0 Then Debug.Print "TEST NG 5c"
+    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
+    If Err.Number <> 0 Or csvs <> "012,12.43,1e3," & vbCrLf & "aaa,ab,,ccc" & vbCrLf Then Debug.Print "TEST NG 5d"
+    If IsVBA Then
+        SetCSVUtilsAnyErrorIsFatal False 'disable
+        Err.Clear
+        csva = ParseCSVToArray(s, False)
+        If Not IsNull(csva) Or Err.Number <> 10001 Then Debug.Print "TEST NG 5e:" & Err.Number
+        Err.Clear
+        csva = ParseCSVToArray(s)
+        If Not IsNull(csva) Or Err.Number <> 10001 Then Debug.Print "TEST NG 5f:" & Err.Number
         Err.Clear
     End If
     
@@ -237,16 +296,15 @@ Sub PerfTest()
   Debug.Print "START parser: " & Len(csv) & " Bytes"
   t = Timer
   'Call ParseCSVToCollection(csv)
-  a = ParseCSVToArray(csv)
+  a = ParseCSVToArray(csv, False)
   If Err.Number <> 0 Then MsgBox Err.Number & Err.Source & Err.Description
   t = Timer - t
   Debug.Print "END: " & t & " sec."
-  Debug.Print " records: " & UBound(a, 1) - 1
-  Debug.Print " fields:  " & UBound(a, 2) - 1
+  Debug.Print " Data Size: " & UBound(a, 2) - 1 & " fields x " & UBound(a, 1) - 1 & " records"
 
   Debug.Print "START writer:"
   t = Timer
-  csv = ConvertArrayToCSV(a)
+  csv = ConvertArrayToCSV(a, "yyyy/m/d", MINIMAL, vbCrLf)
   If Err.Number <> 0 Then MsgBox Err.Number & Err.Source & Err.Description
   t = Timer - t
   Debug.Print "END: " & t & " sec."

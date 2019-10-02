@@ -7,16 +7,25 @@
 ' VBA-CSV
 '
 ' Copyright (C) 2017- sdkn104 ( https://github.com/sdkn104/VBA-CSV/ )
-'
 ' License MIT (http://www.opensource.org/licenses/mit-license.php)
+' Document: https://github.com/sdkn104/VBA-CSV/README.md
 '
 'Option Explicit
 
+'----- Enum -------------------------------------------------------------------------
+
+' Field Quoting
+'   Used for the argument 'quoting' of ConvertArrayToCSV()
+'   This argument controls what kind of fields to be quoted
+'Public Enum CSVUtilsQuote
+    MINIMAL = 0     ' quote the fields that requires quotation (i.e., that includes comma, return code, quotation mark)
+    ALL = 1         ' quote all the fields
+    NONNUMERIC = 2  ' quote non-numeric (Not IsNumeric()) fields
+'End Enum
 
 '----- Global variables -------------------------------------------------------------
 
 Private CSVUtilsAnyErrorIsFatal   'default False
-
 
 '----- ERROR HANDLER ----------------------------------------------------------------
 
@@ -43,12 +52,12 @@ End Sub
 '------ Public Function/Sub --------------------------------------------------------
 
 '
-' Parse CSV text returning Collection
+' Parse CSV text and retern Collection
 '
-'   Return a Collection of records each of which is a Collection of fields
+'   Return a Collection of records; record is a Collection of fields
 '   When error, return Nothing
 '
-Public Function ParseCSVToCollection(ByRef csvText ) 
+Public Function ParseCSVToCollection(ByRef csvText , allowVariableNumOfFields) 
     ' "'On Error 'Resume Next" only if CSVUtilsAnyErrorIsFatal is True
     Err.Clear
 '    If CSVUtilsAnyErrorIsFatal Then GoTo Head
@@ -75,16 +84,19 @@ Public Function ParseCSVToCollection(ByRef csvText )
         recordTextComma = recordText & ","
         Do While FindNextSeparator(recordTextComma, recordPos, fieldText, ",", "")
             If InStr(fieldText, """") > 0 Then
-              fieldText = TrimQuotes(fieldText) 'get internal of double-quotes
-              fieldText = Replace(fieldText, """""", """") 'un-escape double quote
-              If Left(fieldText, 2) = "=""" And Right(fieldText, 1) = """" Then fieldText = Mid(fieldText, 3, Len(fieldText) - 3) 'remove MS quote (="...")
+                fieldText = TrimQuotes(fieldText) 'get internal of double-quotes
+                fieldText = Replace(fieldText, """""", """") 'un-escape double quote
+                If Left(fieldText, 2) = "=""" And Right(fieldText, 1) = """" Then fieldText = Mid(fieldText, 3, Len(fieldText) - 3) 'remove MS quote (="...")
+                'add to collection
+                fields.Add typingField(fieldText, True)
+            Else
+                'add to collection
+                fields.Add typingField(fieldText, False)
             End If
-            'add to collection
-            fields.Add fieldText
         Loop
         csvCollection.Add fields
         
-        If csvCollection.Item(1).Count <> fields.Count Then
+        If Not allowVariableNumOfFields And csvCollection.Item(1).Count <> fields.Count Then
             ErrorRaise 10001, "ParseCSVToCollection", "Syntax Error in CSV: numbers of fields are different among records"
 '            GoTo ErrorExit
         End If
@@ -105,7 +117,7 @@ End Function
 '  When CSV text is "", return empty array --- String(0 TO -1)
 '  When error, return Null
 '
-Public Function ParseCSVToArray(ByRef csvText ) 
+Public Function ParseCSVToArray(ByRef csvText , allowVariableNumOfFields) 
     ' "'On Error 'Resume Next" only if CSVUtilsAnyErrorIsFatal is True
     Err.Clear
 '    If CSVUtilsAnyErrorIsFatal Then GoTo Head
@@ -120,7 +132,7 @@ Public Function ParseCSVToArray(ByRef csvText )
     ParseCSVToArray = Null 'for error
   
     ' convert CSV text to Collection
-    Set csv = ParseCSVToCollection(csvText)
+    Set csv = ParseCSVToCollection(csvText, allowVariableNumOfFields)
     If csv Is Nothing Then  'error occur
         Exit Function
     End If
@@ -132,7 +144,10 @@ Public Function ParseCSVToArray(ByRef csvText )
                                          '(https://msdn.microsoft.com/ja-jp/library/office/gg278528.aspx)
         Exit Function
     End If
-    fldCnt = csv.Item(1).Count
+    fldCnt = 0
+    For ri = 1 To csv.Count
+      If fldCnt < csv.Item(ri).Count Then fldCnt = csv.Item(ri).Count
+    Next
     
     ' copy collection to array
     ReDim csvArray(recCnt-1, fldCnt-1) 
@@ -157,7 +172,9 @@ End Function
 '  fmtDate : format used for conversion from type Date to type String
 '  When error, return ""
 '
-Public Function ConvertArrayToCSV(inArray , fmtDate) 
+Public Function ConvertArrayToCSV(inArray , fmtDate, _
+                          quoting, _
+                          recordSeparator) 
     ' "'On Error 'Resume Next" only if CSVUtilsAnyErrorIsFatal is True
     Err.Clear
 '    If CSVUtilsAnyErrorIsFatal Then GoTo Head
@@ -190,14 +207,16 @@ Public Function ConvertArrayToCSV(inArray , fmtDate)
         cell = v
         If TypeName(v) = "Date" Then cell = Format(v, fmtDate)
         'quote and escape
-        If InStr(cell, ",") > 0 Or InStr(cell, """") > 0 Or InStr(cell, vbCr) > 0 Or InStr(cell, vbLf) > 0 Then
+        If quoting = ALL Or _
+           (quoting = NONNUMERIC And Not IsNumeric(v)) Or _
+           InStr(cell, ",") > 0 Or InStr(cell, """") > 0 Or InStr(cell, vbCr) > 0 Or InStr(cell, vbLf) > 0 Then
           cell = Replace(cell, """", """""")
           cell = """" & cell & """"
         End If
         'add to array
         arrField(c) = cell
       Next
-      arrRecord(r) = Join(arrField, ",") & vbCrLf
+      arrRecord(r) = Join(arrField, ",") & recordSeparator
     Next
 '    If Err.Number <> 0 Then GoTo ErrorExit 'unexpected error
     
@@ -209,6 +228,11 @@ End Function
 
 
 ' ------------- Private function/sub ---------------------------------------------------------------------
+
+Private Function typingField(fieldText , quoted ) 
+    typingField = fieldText
+End Function
+ 
 
 '
 ' Get the next one record from csvText, and put it into recordText
@@ -314,13 +338,23 @@ Function Format(date, fmt)
 End Function
 
 Class Collection
-  Dim Item(100000)
+  Dim arrSize
+  Dim Item()
   Dim Count
   Sub Class_Initialize()
+    arrSize = 10
+    ReDim Item(arrSize)
     Count = 0
+  End Sub
+  Sub Class_Terminate()
+    'Erase Item
   End Sub
   Sub Add(val)
     Count = Count + 1
+    If Count >= arrSize Then
+      arrSize = arrSize * 2
+      ReDim Preserve Item(arrSize)
+    End If
     If IsObject(val) Then
       Set Item(Count) = val
     Else
@@ -329,3 +363,5 @@ Class Collection
   End Sub
 End Class
 '#End If
+
+
