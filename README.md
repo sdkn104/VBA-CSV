@@ -15,7 +15,7 @@ Also includes [VBScript](https://msdn.microsoft.com/library/cc392489.aspx) versi
 
 ## Usage and Examples
 
-#### Public Function ParseCSVToCollection(csvText As String, Optional allowVariableNumOfFields As Boolean = False) As Collection
+#### Function ParseCSVToCollection(csvText As String, Optional allowVariableNumOfFields As Boolean = False) As Collection
 
 ```vb.net
     Dim csv As Collection
@@ -64,9 +64,7 @@ If error occurs, it returns `Null` and the error information is set in `Err` obj
 If input text is zero-length (""), it returns empty array - `String(0 To -1)`.
 Optional boolean argument `allowVariableNumOfFields` specifies whether variable number of fields in records is allowed or handled as error.
 
-#### Function ConvertArrayToCSV(inArray As Variant, Optional fmtDate As String = "yyyy/m/d", 
-                          Optional quoting As CSVUtilsQuote = CSVUtilsQuote.MINIMAL, _
-                          Optional recordSeparator As String = vbCrLf) As String
+#### Function ConvertArrayToCSV(inArray As Variant,   Optional fmtDate As String = "yyyy/m/d",   Optional quoting As CSVUtilsQuote = CSVUtilsQuote.MINIMAL,    Optional recordSeparator As String = vbCrLf) As String
 
 ```vb.net
     Dim csv As String
@@ -88,10 +86,12 @@ Optional boolean argument `allowVariableNumOfFields` specifies whether variable 
 If error occurs, it return the string "", and the error information is set in `Err` object.
 `fmtDate` is used as the argument of text formatting function [`Format`](https://msdn.microsoft.com/library/office/gg251755.aspx) 
 if an element of the array is `Date` type.
-The optional argument `quoting` specifies what type of fields to be quoted. 
+The optional argument `quoting` specifies what type of fields to be quoted:
+
 * `MINIMAL`: Quoting only if it is necessary (the field includes double-quotes, comma, line breaks).
 * `ALL`: Quoting all the fields.
 * `NONNUMERIC`: Similar to MINIMAL, but quoting also all the String type fields.
+
 The optional arugment `recordSeparator` specifies record separator (line terminator), default is CRLF.
 
 #### SetCSVUtilsAnyErrorIsFatal(value As Boolean)
