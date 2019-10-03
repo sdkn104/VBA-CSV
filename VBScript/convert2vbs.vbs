@@ -15,8 +15,7 @@ call writeFile("CSVUtils_Test.vbs", text)
 
 Set WshShell = WScript.CreateObject("WScript.Shell")
 WshShell.Run "cmd.exe /c copy /B CSVUtils_Test.vbs+CSVUtils.vbs go_test.vbs", 1, True
-WshShell.Run "cmd.exe /c echo test >> go_test.vbs", 1, True
-WshShell.Run "cmd.exe /c echo PerfTest >> go_test.vbs", 1, True
+WshShell.Run "cmd.exe /c echo TestAll >> go_test.vbs", 1, True
 
 '---------------------------------------------------------------------------------------
 
