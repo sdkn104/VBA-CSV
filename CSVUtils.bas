@@ -200,7 +200,7 @@ Head:
       For c = LBound(inArray, 2) To UBound(inArray, 2)
         v = inArray(r, c)
         'formatting
-        cell = v
+        cell = IIf(IsNull(v), "", v)
         If TypeName(v) = "Date" Then cell = Format(v, fmtDate)
         'quote and escape
         If quoting = CSVUtilsQuote.ALL Or _
