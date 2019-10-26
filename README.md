@@ -15,8 +15,12 @@ Also includes [VBScript](https://msdn.microsoft.com/library/cc392489.aspx) versi
 
 ## Usage and Examples
 
-#### Function ParseCSVToCollection(csvText As String, Optional allowVariableNumOfFields As Boolean = False) As Collection
-
+#### ParseCSVToCollection
+```vb.net
+Function ParseCSVToCollection( csvText As String, 
+                               Optional allowVariableNumOfFields As Boolean = False ) As Collection
+```
+###### [example]
 ```vb.net
     Dim csv As Collection
     Dim rec As Collection, fld As Variant
@@ -39,8 +43,12 @@ Also includes [VBScript](https://msdn.microsoft.com/library/cc392489.aspx) versi
 If error occurs, it returns `Nothing` and the error information is set in `Err` object.
 Optional boolean argument `allowVariableNumOfFields` specifies whether variable number of fields in records is allowed or handled as error.
 
-#### Function ParseCSVToArray(csvText As String, Optional allowVariableNumOfFields As Boolean = False) As Variant
-
+#### ParseCSVToArray
+```vb.net
+Function ParseCSVToArray( csvText As String, 
+                          Optional allowVariableNumOfFields As Boolean = False ) As Variant
+```
+###### [example]
 ```vb.net
     Dim csv As Variant
     Dim i As Long, j As Variant
@@ -64,8 +72,14 @@ If error occurs, it returns `Null` and the error information is set in `Err` obj
 If input text is zero-length (""), it returns empty array - `String(0 To -1)`.
 Optional boolean argument `allowVariableNumOfFields` specifies whether variable number of fields in records is allowed or handled as error.
 
-#### Function ConvertArrayToCSV(inArray As Variant,   Optional fmtDate As String = "yyyy/m/d",   Optional quoting As CSVUtilsQuote = CSVUtilsQuote.MINIMAL,    Optional recordSeparator As String = vbCrLf) As String
-
+#### ConvertArrayToCSV
+```vb.net
+Function ConvertArrayToCSV( inArray As Variant,
+                            Optional fmtDate As String = "yyyy/m/d",
+                            Optional quoting As CSVUtilsQuote = CSVUtilsQuote.MINIMAL,
+                            Optional recordSeparator As String = vbCrLf ) As String
+```
+###### [example]
 ```vb.net
     Dim csv As String
     Dim a(1 To 2, 1 To 2) As Variant
@@ -94,8 +108,11 @@ The optional argument `quoting` specifies what type of fields to be quoted:
 
 The optional arugment `recordSeparator` specifies record separator (line terminator), default is CRLF.
 
-#### SetCSVUtilsAnyErrorIsFatal(value As Boolean)
-
+#### SetCSVUtilsAnyErrorIsFatal
+```vb.net
+SetCSVUtilsAnyErrorIsFatal(value As Boolean)
+```
+###### [example]
 ```vb.net
     SetCSVUtilsAnyErrorIsFatal True
     SetCSVUtilsAnyErrorIsFatal False
@@ -112,7 +129,7 @@ This function changes error handling mode for CSV parsers and writer.
 1. Download the latest release.
 2. Import CSVUtils.bas (and other \*.bas) into your project (Open VBA Editor, Alt + F11; File > Import File)
 
-## Tested on
+## Tested in
 
 * MS Excel 2000 on Windows 10
 * MS Excel 2013 on Windows 7
