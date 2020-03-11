@@ -2,7 +2,8 @@ VBScript Version
 ================
 
 VBScript version consists of CSVUtils.vbs and CSVUtils_Test.vbs.
-These script files are automatically converted from VBA version by using convert2vbs.vbs.
+These script files are automatically converted from VBA version of v1.7 by using convert2vbs.vbs.
+See README.md of v1.7 (README_v17.md) for the specification of the functions.
 
 VBScript version is different from VBA version in the following points.
 * `SetCSVUtilsAnyErrorIsFatal False` causes no effect. Any Error is always fatal.
