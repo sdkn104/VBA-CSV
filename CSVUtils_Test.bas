@@ -12,7 +12,6 @@ Option Explicit
 Const IsVBA As Boolean = True
 
 
-
 ' Execute All Tests
 Sub TestAll()
     FunctionTest
@@ -33,6 +32,7 @@ Sub FunctionTest()
     Dim csv As Collection
     Dim csva
     Dim csvs As String, csvs2 As String
+    Dim csvd As Object, csvd2 As Object
     
     'error test data
     csvTextErr(0) = "aaa,""b""b"",ccc"  'illegal double quate
@@ -91,6 +91,9 @@ Sub FunctionTest()
         csvs = ConvertArrayToCSV(s)
         MUST_BE_ERROR_STR csvs, 10004, "0c:"
         Err.Clear
+        Set csvd = ParseCSVToDictionary(csvTextErr(0))
+        MUST_BE_ERROR_OBJ csvd, 10002, "0d:"
+        Err.Clear
     End If
                 
                 
@@ -105,13 +108,14 @@ Sub FunctionTest()
         Set csv = ParseCSVToCollection(csvTextErr(0))
         csva = ParseCSVToArray(csvTextErr(0))
         csvs = ConvertArrayToCSV(s)
+        Set csvd = ParseCSVToDictionary(csvTextErr(0))
         GoTo NextTest
 ErrCatch:
         errorCnt = errorCnt + 1
         If Err.Number <> 10002 And Err.Number <> 10004 Then Debug.Print "TEST FAILED 3:" & Err.Number
         Resume Next
 NextTest:
-        If errorCnt <> 3 Then Debug.Print "TEST FAILED 4:" & errorCnt
+        If errorCnt <> 4 Then Debug.Print "TEST FAILED 4:" & errorCnt
         On Error GoTo 0
     End If
     
@@ -120,6 +124,7 @@ NextTest:
     arrStart = 1
     If Not IsVBA Then arrStart = 0
     For i = 0 To 9
+        'ParseCSVToCollection
         Set csv = ParseCSVToCollection(csvText(i), False)
         MUST_BE_SUCCESS_OBJ csv, "success"
         MUST_BE csv.Count = UBound(csvExpected(i)) + 1, " wrong row count"
@@ -130,7 +135,7 @@ NextTest:
             'Debug.Print "[" & csv(r)(f) & "]"
           Next
         Next
-        
+        'ParseCSVToArray
         csva = ParseCSVToArray(csvText(i), False)
         MUST_BE_SUCCESS_VAR csva, "success2"
         MUST_BE (LBound(csva, 1) = arrStart Or (LBound(csva, 1) = 0 And UBound(csva, 1) = -1)), "illegal array bounds"
@@ -143,8 +148,52 @@ NextTest:
             'Debug.Print "[" & csvExpected(i)(r - 1)(f - 1) & "]"
           Next
         Next
+        ' ParseCSVToDictionary.  checking only success and colum count, since using ParseCSVToCollection for parsing
+        Dim k
+        Set csvd = ParseCSVToDictionary(csvText(i), 1, False)
+        MUST_BE_SUCCESS_OBJ csvd, "success"
+        For Each k In csvd.keys
+          MUST_BE csvd.Item(k).Count = UBound(csvExpected(i)(0)) + 1, "wrong col count"
+        Next
+        ' GetFieldDictionary.  checking only success, since using ParseCSVToCollection for parsing
+        Set csvd = GetFieldDictionary(csvText(i))
+        MUST_BE_SUCCESS_OBJ csvd, "success"
     Next
 
+    ' ParseCSVToDictionary()
+    Set csvd = ParseCSVToDictionary("", 1, False) ' empty
+    MUST_BE_SUCCESS_OBJ csvd, "success"
+    MUST_BE csvd.Count = 0, " wrong row count"
+    Set csvd = ParseCSVToDictionary("a,b,c", 1, False) ' header only
+    MUST_BE_SUCCESS_OBJ csvd, "success"
+    MUST_BE csvd.Count = 0, " wrong row count"
+    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3", 1, False) 'header and one data
+    MUST_BE_SUCCESS_OBJ csvd, "success"
+    MUST_BE csvd.Count = 1, " wrong row count"
+    MUST_BE csvd("1")(1) = 1 And csvd("1")(2) = 2 And csvd("1")(3) = 3, " wrong value"
+    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "11,12,13", 1, False) ' two uniq data, keyCol=1
+    MUST_BE_SUCCESS_OBJ csvd, "success"
+    MUST_BE csvd.Count = 2, " wrong row count"
+    MUST_BE csvd("1")(1) = 1 And csvd("1")(2) = 2 And csvd("1")(3) = 3, " wrong value"
+    MUST_BE csvd("11")(1) = 11 And csvd("11")(2) = 12 And csvd("11")(3) = 13, " wrong value"
+    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "11,12,13") ' two uniq data, keyCol=default
+    MUST_BE_SUCCESS_OBJ csvd, "success"
+    MUST_BE csvd.Count = 2, " wrong row count"
+    MUST_BE csvd("1")(1) = 1 And csvd("1")(2) = 2 And csvd("1")(3) = 3, " wrong value"
+    MUST_BE csvd("11")(1) = 11 And csvd("11")(2) = 12 And csvd("11")(3) = 13, " wrong value"
+    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "1,12,13", 1, False) ' two duplicated data, keyCol=1
+    MUST_BE_SUCCESS_OBJ csvd, "success"
+    MUST_BE csvd.Count = 1, " wrong row count"
+    MUST_BE csvd("1")(1) = 1 And csvd("1")(2) = 12 And csvd("1")(3) = 13, " wrong value"
+    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "1,12,13", 2, False) ' two uniq data, keyCol=2
+    MUST_BE_SUCCESS_OBJ csvd, "success"
+    MUST_BE csvd.Count = 2, " wrong row count"
+    MUST_BE csvd("2")(1) = 1 And csvd("2")(2) = 2 And csvd("2")(3) = 3, " wrong value"
+    MUST_BE csvd("12")(1) = 1 And csvd("12")(2) = 12 And csvd("12")(3) = 13, " wrong value"
+    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "1,12,13") ' 2 duplicated data, keyCol=default
+    MUST_BE_SUCCESS_OBJ csvd, "success"
+    MUST_BE csvd.Count = 1, " wrong row count"
+        
     If IsVBA Then
         Debug.Print "----- Testing error data  for parseXXXX() ----------------"
     
@@ -157,12 +206,18 @@ NextTest:
         csva = ParseCSVToArray(csvTextErr(0))
         MUST_BE_ERROR_VAR csva, 10002, "0b:"
         Err.Clear
+        Set csvd = ParseCSVToDictionary(csvTextErr(0))
+        MUST_BE_ERROR_OBJ csvd, 10002, "0c:"
+        Err.Clear
     
         Set csv = ParseCSVToCollection(csvTextErr(1))
         MUST_BE_ERROR_OBJ csv, 10002, "1a:"
         Err.Clear
         csva = ParseCSVToArray(csvTextErr(1))
         MUST_BE_ERROR_VAR csva, 10002, "1b:"
+        Err.Clear
+        Set csvd = ParseCSVToDictionary(csvTextErr(1))
+        MUST_BE_ERROR_OBJ csvd, 10002, "1c:"
         Err.Clear
         
         Set csv = ParseCSVToCollection(csvTextErr(2))
@@ -171,6 +226,10 @@ NextTest:
         csva = ParseCSVToArray(csvTextErr(2))
         MUST_BE_ERROR_VAR csva, 10001, "2b:"
         Err.Clear
+        Set csvd = ParseCSVToDictionary(csvTextErr(2))
+        MUST_BE_ERROR_OBJ csvd, 10001, "2c:"
+        Err.Clear
+    
     End If
     
     Debug.Print "----- Testing success data for ConvertArrayToCSV() -------------------"
@@ -182,7 +241,7 @@ NextTest:
     MUST_BE_SUCCESS_STR csvs, "3a"
     MUST_BE csvs = s, "3a2"
     If IsVBA Then
-        'array range not starts with 1 'this is not needed for VBScript
+        'array range not starts with 1
         Dim aa1() As String
         ReDim aa1(0 To 1, 2 To 3) As String
         aa1(0, 2) = 1: aa1(1, 3) = 1
@@ -233,7 +292,7 @@ NextTest:
     End If
     csvs = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
     MUST_BE_SUCCESS_STR csvs, "3j": MUST_BE csvs = s, "3j"
-    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", ALL, vbCrLf)
+    csvs = ConvertArrayToCSV(csva, "yyyy/m/d", All, vbCrLf)
     s = """012"",""12.43"",""1e3"",""""" & vbCrLf & """aaa"",""a,b"","""""""",""" & vbCr & """" & vbCrLf
     MUST_BE_SUCCESS_STR csvs, "3k": MUST_BE csvs = s, "3k"
     csvs = ConvertArrayToCSV(csva, "yyyy/m/d", NONNUMERIC, vbCrLf)
@@ -253,34 +312,96 @@ NextTest:
         Err.Clear
     End If
     
-    Debug.Print "----- Testing Others -------------------"
-    ' allowVariableNumOfFields for parseXXXX()
+    Debug.Print "----- Testing allowVariableNumOfFields for parseXXXX() -------------------"
     s = "012,12.43,1e3," & vbCrLf & "aaa,ab,,ccc" & vbCrLf ' not variable data
+    ' parseCSVToArray
     csva = ParseCSVToArray(s, False)
     csvs = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
-    If IsVBA Then '---- omit argument
-        csva = ParseCSVToArray(s)
-        csvs2 = ConvertArrayToCSV(csva)
-        MUST_BE_SUCCESS_STR csvs, "5a": MUST_BE csvs = csvs2, "5a"
-    End If
+    csva = ParseCSVToArray(s)
+    csvs2 = ConvertArrayToCSV(csva)
+    MUST_BE_SUCCESS_STR csvs, "5a": MUST_BE csvs = csvs2, "5a"
     csva = ParseCSVToArray(s, True)
     csvs2 = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
     MUST_BE_SUCCESS_STR csvs, "5b": MUST_BE csvs = csvs2, "5b"
+    ' parseCSVToDictionary
+    Set csvd = ParseCSVToDictionary(s, 1, False)
+    Set csvd2 = ParseCSVToDictionary(s, 1)
+    MUST_BE_SUCCESS_OBJ csvd, "5c"
+    MUST_BE csvd.Count = csvd2.Count, "5c"
+    For Each k In csvd.keys
+        MUST_BE csvd(k).Count = csvd2(k).Count, "5cv"
+        MUST_BE csvd(k)(1) = csvd2(k)(1), "5cv"
+        MUST_BE csvd(k)(2) = csvd2(k)(2), "5cv"
+        MUST_BE csvd(k)(3) = csvd2(k)(3), "5cv"
+    Next
+    Set csvd2 = ParseCSVToDictionary(s, 1, True)
+    MUST_BE_SUCCESS_OBJ csvd, "5d"
+    MUST_BE csvd.Count = csvd2.Count, "5d"
+    For Each k In csvd.keys
+        MUST_BE csvd(k).Count = csvd2(k).Count, "5dv"
+        MUST_BE csvd(k)(1) = csvd2(k)(1), "5dv"
+        MUST_BE csvd(k)(2) = csvd2(k)(2), "5dv"
+        MUST_BE csvd(k)(3) = csvd2(k)(3), "5dv"
+    Next
+    
     s = "012,12.43,1e3" & vbCrLf & "aaa,ab,,ccc" & vbCrLf ' variable data
+    ' ParseCSVToArray
     csva = ParseCSVToArray(s, True)
-    MUST_BE_SUCCESS_VAR csva, "5c"
+    MUST_BE_SUCCESS_VAR csva, "5e"
     csvs = ConvertArrayToCSV(csva, "yyyy/m/d", MINIMAL, vbCrLf)
-    MUST_BE_SUCCESS_STR csvs, "5d": MUST_BE csvs = "012,12.43,1e3," & vbCrLf & "aaa,ab,,ccc" & vbCrLf, "5d"
+    MUST_BE_SUCCESS_STR csvs, "5f": MUST_BE csvs = "012,12.43,1e3," & vbCrLf & "aaa,ab,,ccc" & vbCrLf, "5f"
+    ' parseCSVToDictionary
+    Set csvd = ParseCSVToDictionary(s, 1, True)
+    MUST_BE_SUCCESS_OBJ csvd, "5g"
+    MUST_BE csvd.Count = 1, "5h"
+    MUST_BE csvd("aaa")(1) = "aaa" And csvd("aaa")(2) = "ab" And csvd("aaa")(3) = "" And csvd("aaa")(4) = "ccc", "5h"
+        
     If IsVBA Then
         SetCSVUtilsAnyErrorIsFatal False 'disable
         Err.Clear
+        ' ParseCSVToArray
         csva = ParseCSVToArray(s, False)
-        MUST_BE_ERROR_VAR csva, 10001, "5e:"
+        MUST_BE_ERROR_VAR csva, 10001, "5i:"
         Err.Clear
         csva = ParseCSVToArray(s)
-        MUST_BE_ERROR_VAR csva, 10001, "5f:"
+        MUST_BE_ERROR_VAR csva, 10001, "5j:"
+        Err.Clear
+        ' parseCSVToDictionary
+        Set csvd = ParseCSVToDictionary(s, 1, False)
+        MUST_BE_ERROR_OBJ csvd, 10001, "5k"
+        Err.Clear
+        Set csvd = ParseCSVToDictionary(s, 1)
+        MUST_BE_ERROR_OBJ csvd, 10001, "5l"
         Err.Clear
     End If
+
+    Debug.Print "----- Testing GetFieldDictionary() for success data -------------------"
+    Set csvd = GetFieldDictionary("") ' empty
+    MUST_BE_SUCCESS_OBJ csvd, "6a"
+    MUST_BE csvd.Count = 0, "6b"
+    Set csvd = GetFieldDictionary(vbCrLf) ' one blank field
+    MUST_BE_SUCCESS_OBJ csvd, "6d"
+    MUST_BE csvd.Count = 1, "6e"
+    MUST_BE csvd("") = 1, "6f"
+    Set csvd = GetFieldDictionary("a,b,c") ' three uniq fields
+    MUST_BE_SUCCESS_OBJ csvd, "6g"
+    MUST_BE csvd.Count = 3, "6h"
+    MUST_BE csvd("a") = 1 And csvd("b") = 2 And csvd("c") = 3, "6i"
+    Set csvd = GetFieldDictionary("a,a,c") ' three duplicated fields
+    MUST_BE_SUCCESS_OBJ csvd, "6j"
+    MUST_BE csvd.Count = 2, "6k"
+    MUST_BE csvd("a") = 2 And csvd("c") = 3, "6l"
+    
+    Debug.Print "----- Testing error data  for GetFieldDictionary() ----------------"
+
+    SetCSVUtilsAnyErrorIsFatal False 'disable
+    Err.Clear
+    Set csvd = GetFieldDictionary(csvTextErr(0))
+    MUST_BE_ERROR_OBJ csvd, 10002, "0d:"
+    Err.Clear
+    Set csvd = GetFieldDictionary(csvTextErr(1))
+    MUST_BE_ERROR_OBJ csvd, 10002, "1d:"
+    Err.Clear
     
     Debug.Print "******** End All Functional Testing ********"
     
@@ -361,4 +482,5 @@ End Sub
 Sub MUST_BE(cond, msgText)
     If Not cond Then Debug.Print "TEST FAILED " & msgText & Err.Number
 End Sub
+
 
