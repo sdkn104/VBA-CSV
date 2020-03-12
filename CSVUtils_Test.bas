@@ -164,35 +164,37 @@ NextTest:
     Set csvd = ParseCSVToDictionary("", 1, False) ' empty
     MUST_BE_SUCCESS_OBJ csvd, "success"
     MUST_BE csvd.Count = 0, " wrong row count"
-    Set csvd = ParseCSVToDictionary("a,b,c", 1, False) ' header only
+    Set csvd = ParseCSVToDictionary(vbCrLf, 1, False) ' header only
     MUST_BE_SUCCESS_OBJ csvd, "success"
-    MUST_BE csvd.Count = 0, " wrong row count"
-    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3", 1, False) 'header and one data
+    MUST_BE csvd.Count = 1, " wrong row count"
+    MUST_BE csvd("")(1) = "", " wrong value"
+    Set csvd = ParseCSVToDictionary("1,2,3", 1, False) 'header and one data
     MUST_BE_SUCCESS_OBJ csvd, "success"
     MUST_BE csvd.Count = 1, " wrong row count"
     MUST_BE csvd("1")(1) = 1 And csvd("1")(2) = 2 And csvd("1")(3) = 3, " wrong value"
-    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "11,12,13", 1, False) ' two uniq data, keyCol=1
+    Set csvd = ParseCSVToDictionary("1,2,3" & vbCrLf & "11,12,13", 1, False) ' two uniq data, keyCol=1
     MUST_BE_SUCCESS_OBJ csvd, "success"
     MUST_BE csvd.Count = 2, " wrong row count"
     MUST_BE csvd("1")(1) = 1 And csvd("1")(2) = 2 And csvd("1")(3) = 3, " wrong value"
     MUST_BE csvd("11")(1) = 11 And csvd("11")(2) = 12 And csvd("11")(3) = 13, " wrong value"
-    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "11,12,13") ' two uniq data, keyCol=default
+    Set csvd = ParseCSVToDictionary("1,2,3" & vbCrLf & "11,12,13") ' two uniq data, keyCol=default
     MUST_BE_SUCCESS_OBJ csvd, "success"
     MUST_BE csvd.Count = 2, " wrong row count"
     MUST_BE csvd("1")(1) = 1 And csvd("1")(2) = 2 And csvd("1")(3) = 3, " wrong value"
     MUST_BE csvd("11")(1) = 11 And csvd("11")(2) = 12 And csvd("11")(3) = 13, " wrong value"
-    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "1,12,13", 1, False) ' two duplicated data, keyCol=1
+    Set csvd = ParseCSVToDictionary("1,2,3" & vbCrLf & "1,12,13", 1, False) ' two duplicated data, keyCol=1
     MUST_BE_SUCCESS_OBJ csvd, "success"
     MUST_BE csvd.Count = 1, " wrong row count"
     MUST_BE csvd("1")(1) = 1 And csvd("1")(2) = 12 And csvd("1")(3) = 13, " wrong value"
-    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "1,12,13", 2, False) ' two uniq data, keyCol=2
+    Set csvd = ParseCSVToDictionary("1,2,3" & vbCrLf & "1,12,13", 2, False) ' two uniq data, keyCol=2
     MUST_BE_SUCCESS_OBJ csvd, "success"
     MUST_BE csvd.Count = 2, " wrong row count"
     MUST_BE csvd("2")(1) = 1 And csvd("2")(2) = 2 And csvd("2")(3) = 3, " wrong value"
     MUST_BE csvd("12")(1) = 1 And csvd("12")(2) = 12 And csvd("12")(3) = 13, " wrong value"
-    Set csvd = ParseCSVToDictionary("a,b,c" & vbCrLf & "1,2,3" & vbCrLf & "1,12,13") ' 2 duplicated data, keyCol=default
+    Set csvd = ParseCSVToDictionary("1,2,3" & vbCrLf & "1,12,13") ' 2 duplicated data, keyCol=default
     MUST_BE_SUCCESS_OBJ csvd, "success"
     MUST_BE csvd.Count = 1, " wrong row count"
+    MUST_BE csvd("1")(1) = 1 And csvd("1")(2) = 12 And csvd("1")(3) = 13, " wrong value"
         
     If IsVBA Then
         Debug.Print "----- Testing error data  for parseXXXX() ----------------"
@@ -353,8 +355,9 @@ NextTest:
     ' parseCSVToDictionary
     Set csvd = ParseCSVToDictionary(s, 1, True)
     MUST_BE_SUCCESS_OBJ csvd, "5g"
-    MUST_BE csvd.Count = 1, "5h"
-    MUST_BE csvd("aaa")(1) = "aaa" And csvd("aaa")(2) = "ab" And csvd("aaa")(3) = "" And csvd("aaa")(4) = "ccc", "5h"
+    MUST_BE csvd.Count = 2, "5h"
+    MUST_BE csvd("012")(1) = "012" And csvd("012")(2) = "12.43" And csvd("012")(3) = "1e3", "5h"
+    MUST_BE csvd("aaa")(1) = "aaa" And csvd("aaa")(2) = "ab" And csvd("aaa")(3) = "" And csvd("aaa")(4) = "ccc", "5h2"
         
     If IsVBA Then
         SetCSVUtilsAnyErrorIsFatal False 'disable
@@ -482,5 +485,3 @@ End Sub
 Sub MUST_BE(cond, msgText)
     If Not cond Then Debug.Print "TEST FAILED " & msgText & Err.Number
 End Sub
-
-
