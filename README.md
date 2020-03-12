@@ -7,7 +7,7 @@ The CSV writer converts 2-dimensional array to CSV text.
 * The parsers and writer are compliant with the CSV format defined in [RFC4180](http://www.ietf.org/rfc/rfc4180.txt), 
   which allows commas, line breaks, and double-quotes included in the fields.
 * Function test procedure, performance test procedure and examples are included.
-* The parser takes about 3 sec. for 8MB CSV, 8000 rows x 100 columns.
+* The parser takes about 1.5 sec. for 8MB CSV, 8000 rows x 100 columns.
 * The writer takes about 1 sec. for 8MB CSV, 8000 rows x 100 columns.
 * The parsers do not fully check the syntax error (they parse correctly if the CSV has no syntax error).
 
@@ -123,6 +123,52 @@ This function changes error handling mode for CSV parsers and writer.
 **False (default)** - When run-time error occurs, the parser function returns special value (`Nothing`,  `Null`, etc.), 
                       and the error information is set to properties of `Err` object.    
 **True**            - Any run-time error that occurs is fatal (an error message is displayed and execution stops).
+
+#### ParseCSVToDictionary
+```vb.net
+Public Function ParseCSVToDictionary(ByRef csvText As String, Optional ByRef keyColumn As Long = 1, 
+                                     Optional ByRef allowVariableNumOfFields As Boolean = False) As Object
+```
+###### [example]
+```vb.net
+    Dim csv As String
+    Dim csvd As Object
+
+    csv = "key,val1, val2" & vbCrLf & "name1,v11,v12" & vbCrLf & "name2,v21,v22"
+    Set csvd = ParseCSVToDictionary(csv, 1)
+    Debug.Print csvd("name1")(2)  ' --> val11
+    Debug.Print csvd("name1")(3)  ' --> val12
+    Debug.Print csvd("name2")(2)  ' --> val21
+```
+
+`ParseCSVToDictionary()` returns a Dictionary (Scripting.Dictionary) of records; the records are Collections of fields.
+In default, the first field of each record is the key of the dictionary.
+The column number of the key field can be specified by `keyColumn`, whose default value is 1.
+If there are multiple records whose key fields are the same, the value for the key is set to the last record among them.
+If error occurs, it returns `Nothing` and the error information is set in `Err` object.
+Optional boolean argument `allowVariableNumOfFields` specifies whether variable number of fields in records is allowed or handled as error.
+
+#### GetFieldDictionary
+```vb.net
+Public Function GetFieldDictionary(ByRef csvText As String) As Object
+```
+###### [example]
+```vb.net
+    Dim csv As String
+    Dim csva
+    Dim field As Object
+
+    csv = "key,val1, val2" & vbCrLf & "name1,v11,v12" & vbCrLf & "name2,v21,v22"
+    Set field = GetFieldDictionary(csv)
+    csva = ParseCSVToArray(csv)
+    Debug.Print csva(2, field("key"))  ' --> name1
+    Debug.Print csva(3, field("val1"))  ' --> v21
+```
+
+`GetFieldDictionary()` returns a Dictionary (Scripting.Dictionary) of field names, whose keys are the field values of the first records 
+and whose values are the column numbers of the fields.
+If there are multiple fields of the same value in the first record, the value for the key is set to the largest column number among the fields.
+If error occurs, it returns `Nothing` and the error information is set in `Err` object.
 
 ## Installation
  
