@@ -469,7 +469,7 @@ Private Sub StrCount(Source As String, n As Long, p1 As Long, ByRef quoteCount A
     Dim nn As Long
     Do
         ss = Mid(Source, n + 1, p1 - n) ' to avoid from feeding long string to InStr().
-        nn = InStr(1, sss, """")
+        nn = InStr(1, ss, """")
         If nn = 0 Then Exit Do
         n = n + nn
         quoteCount = quoteCount + 1
