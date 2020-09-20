@@ -7,8 +7,8 @@ The CSV writer converts 2-dimensional array to CSV text.
 * The parsers and writer are compliant with the CSV format defined in [RFC4180](http://www.ietf.org/rfc/rfc4180.txt), 
   which allows commas, line breaks, and double-quotes included in the fields.
 * Function test procedure, performance test procedure and examples are included.
-* The parser takes about 1.5 sec. for 8MB CSV, 8000 rows x 100 columns.
-* The writer takes about 1 sec. for 8MB CSV, 8000 rows x 100 columns.
+* The parser takes about 2.2 sec. for 8MB CSV, 8000 rows x 100 columns. (on Core i5-3470 CPU @ 3.2GHz, 4GB RAM)
+* The writer takes about 1.2 sec. for 8MB CSV, 8000 rows x 100 columns. (on Core i5-3470 CPU @ 3.2GHz, 4GB RAM)
 * The parsers do not fully check the syntax error (they parse correctly if the CSV has no syntax error).
 
 Also includes [VBScript](https://msdn.microsoft.com/library/cc392489.aspx) version in [VBScript folder](VBScript).
